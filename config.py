@@ -5,9 +5,14 @@ import os
 dotenv.load_dotenv()
 
 MLX_BASE = "https://api.multilogin.com"
-MLX_LAUNCHER = "https://launcher.mlx.yt:45001/api/v1"
-MLX_LAUNCHER_V2 = ("https://launcher.mlx.yt:45001/api/v2")
-MLX_LAUNCHER_V3 = "https://launcher.mlx.yt:45001/api/v3"
+# MLX_LAUNCHER = "https://launcher.mlx.yt:45001/api/v1"
+# MLX_LAUNCHER_V2 = ("https://launcher.mlx.yt:45001/api/v2")
+# MLX_LAUNCHER_V3 = "https://launcher.mlx.yt:45001/api/v3"
+
+MLX_LAUNCHER = "https://192.168.9.179:45001/api/v1"
+MLX_LAUNCHER_V2 = "https://192.168.9.179:45001/api/v2"
+MLX_LAUNCHER_V3 = "https://192.168.9.179:45001/api/v3"
+
 LOCALHOST = "http://127.0.0.1"
 HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
 USERNAME = os.getenv("MLX_USERNAME")
