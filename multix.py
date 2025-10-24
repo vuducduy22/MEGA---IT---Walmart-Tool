@@ -8,6 +8,9 @@ import logging
 import pyotp
 from datetime import datetime, timedelta
 from selenium.webdriver.chromium.options import ChromiumOptions
+import urllib3
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 class MultiloginService:
@@ -37,9 +40,48 @@ class MultiloginService:
         self.workspace_token = None
         self.automation_token = None
         
-        # Session để tái sử dụng connections
+        # Session để tái sử dụng connections với SSL configuration
         self.session = requests.Session()
         self.session.headers.update(HEADERS)
+        
+        # Cấu hình SSL và retry strategy
+        self._configure_ssl_session()
+    
+    def _configure_ssl_session(self):
+        """Cấu hình SSL session để xử lý lỗi SSL"""
+        try:
+            # Disable SSL warnings
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
+            # Tạo retry strategy
+            retry_strategy = Retry(
+                total=3,
+                backoff_factor=1,
+                status_forcelist=[429, 500, 502, 503, 504],
+                method_whitelist=["HEAD", "GET", "OPTIONS", "POST"]
+            )
+            
+            # Tạo adapter với SSL configuration
+            adapter = HTTPAdapter(
+                max_retries=retry_strategy,
+                pool_connections=10,
+                pool_maxsize=20
+            )
+            
+            # Mount adapter cho HTTP và HTTPS
+            self.session.mount("http://", adapter)
+            self.session.mount("https://", adapter)
+            
+            # Cấu hình SSL verification
+            self.session.verify = False  # Tạm thời disable SSL verification
+            
+            # Set timeout
+            self.session.timeout = 30
+            
+            logging.info("SSL session configured with retry strategy")
+            
+        except Exception as e:
+            logging.error(f"Error configuring SSL session: {e}")
     
     def signin(self):
         """Đăng nhập vào tài khoản Multilogin"""
@@ -535,10 +577,12 @@ def switch_workspace(refresh_token: str) -> str:
 
 
 def get_status(p):
-    r = requests.get(
-        f"{MLX_LAUNCHER}/profile/status/p/{p}",
-        headers = HEADERS,
-    )
+    try:
+        ssl_session = create_ssl_session()
+        r = ssl_session.get(f"{MLX_LAUNCHER}/profile/status/p/{p}")
+    except Exception as e:
+        print(f"SSL Error in get_status: {e}")
+        r = requests.get(f"{MLX_LAUNCHER}/profile/status/p/{p}", headers=HEADERS, verify=False)
     response = r.json()
     return response["data"]["status"]
 
@@ -553,10 +597,12 @@ def get_port(p):
     return port
 
 def start_profile(p) -> webdriver:
-    r = requests.get(
-        f"{MLX_LAUNCHER_V2}/profile/f/{FOLDER_ID}/p/{p}/start?automation_type=selenium",
-        headers=HEADERS,
-    )
+    try:
+        ssl_session = create_ssl_session()
+        r = ssl_session.get(f"{MLX_LAUNCHER_V2}/profile/f/{FOLDER_ID}/p/{p}/start?automation_type=selenium")
+    except Exception as e:
+        print(f"SSL Error in start_profile: {e}")
+        r = requests.get(f"{MLX_LAUNCHER_V2}/profile/f/{FOLDER_ID}/p/{p}/start?automation_type=selenium", headers=HEADERS, verify=False)
     response = r.json()
     if r.status_code != 200:
         print(f"\nError while starting profile: {r.text}\n")
@@ -572,12 +618,54 @@ def start_profile(p) -> webdriver:
 
 
 def stop_profile(p) -> None:
-    r = requests.get(f"{MLX_LAUNCHER}/profile/stop/p/{p}", headers=HEADERS)
+    try:
+        ssl_session = create_ssl_session()
+        r = ssl_session.get(f"{MLX_LAUNCHER}/profile/stop/p/{p}")
+    except Exception as e:
+        print(f"SSL Error in stop_profile: {e}")
+        r = requests.get(f"{MLX_LAUNCHER}/profile/stop/p/{p}", headers=HEADERS, verify=False)
     if r.status_code != 200:
         print(f"\nError while stopping profile: {r.text}\n")
     else:
         print(f"\nProfile {p} stopped.\n")
 
+
+def create_ssl_session():
+    """Tạo session với SSL configuration để xử lý lỗi SSL"""
+    session = requests.Session()
+    
+    # Disable SSL warnings
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    
+    # Tạo retry strategy
+    retry_strategy = Retry(
+        total=3,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+        method_whitelist=["HEAD", "GET", "OPTIONS", "POST"]
+    )
+    
+    # Tạo adapter với SSL configuration
+    adapter = HTTPAdapter(
+        max_retries=retry_strategy,
+        pool_connections=10,
+        pool_maxsize=20
+    )
+    
+    # Mount adapter cho HTTP và HTTPS
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    
+    # Cấu hình SSL verification
+    session.verify = False  # Tạm thời disable SSL verification
+    
+    # Set timeout
+    session.timeout = 30
+    
+    # Set headers
+    session.headers.update(HEADERS)
+    
+    return session
 
 def start_quick_profile(proxy: str = None):
     payload = {
@@ -639,7 +727,34 @@ def start_quick_profile(proxy: str = None):
             raise ValueError(f"Invalid proxy format: {proxy}. Expected format: 'host:port' or 'host:port:username:password'")
     
     payload_json = json.dumps(payload)
-    response = requests.request("POST", f"{MLX_LAUNCHER_V2}/profile/quick", headers=HEADERS, data=payload_json)
+    
+    # Sử dụng SSL session để xử lý lỗi SSL
+    try:
+        ssl_session = create_ssl_session()
+        response = ssl_session.post(f"{MLX_LAUNCHER_V2}/profile/quick", data=payload_json)
+    except Exception as ssl_error:
+        print(f"SSL Error: {ssl_error}")
+        print("Thử lại với HTTP thay vì HTTPS...")
+        
+        # Fallback: thử với HTTP nếu HTTPS fail
+        try:
+            http_url = f"http://launcher.mlx.yt:45001/api/v2/profile/quick"
+            response = requests.post(http_url, headers=HEADERS, data=payload_json, verify=False, timeout=30)
+        except Exception as http_error:
+            print(f"HTTP Error: {http_error}")
+            return None, {
+                "error": True,
+                "status_code": 500,
+                "error_code": "CONNECTION_FAILED",
+                "message": f"Không thể kết nối đến Multilogin Launcher: {str(ssl_error)}",
+                "detailed_message": f"SSL Error: {ssl_error}, HTTP Error: {http_error}",
+                "suggestion": [
+                    "Kiểm tra Multilogin Launcher có đang chạy không",
+                    "Kiểm tra kết nối mạng",
+                    "Thử restart Multilogin Launcher",
+                    "Kiểm tra firewall settings"
+                ]
+            }
     print(response.json())
     if response.json()["status"]["http_code"] == 200:
         selenium_port = response.json()["data"]["port"]
@@ -753,7 +868,12 @@ def get_error_suggestion(status_code, error_code, error_message):
 
 
 def get_profile_status(profile_id):
-    response = requests.get(f"{MLX_LAUNCHER}/profile/status/p/{profile_id}", headers=HEADERS)
+    try:
+        ssl_session = create_ssl_session()
+        response = ssl_session.get(f"{MLX_LAUNCHER}/profile/status/p/{profile_id}")
+    except Exception as e:
+        print(f"SSL Error in get_profile_status: {e}")
+        response = requests.get(f"{MLX_LAUNCHER}/profile/status/p/{profile_id}", headers=HEADERS, verify=False)
     try:
         response_data = response.json()
         if response_data and "status" in response_data and response_data["status"]["http_code"] == 200:
@@ -764,7 +884,12 @@ def get_profile_status(profile_id):
         return None
     
 def stop_all_profiles():
-    response = requests.get(f"{MLX_LAUNCHER}/profile/stop_all?type=all", headers=HEADERS)
+    try:
+        ssl_session = create_ssl_session()
+        response = ssl_session.get(f"{MLX_LAUNCHER}/profile/stop_all?type=all")
+    except Exception as e:
+        print(f"SSL Error in stop_all_profiles: {e}")
+        response = requests.get(f"{MLX_LAUNCHER}/profile/stop_all?type=all", headers=HEADERS, verify=False)
     try:
         response_data = response.json()
         if response_data and "status" in response_data and response_data["status"]["http_code"] == 200:
@@ -776,7 +901,12 @@ def stop_all_profiles():
 
 def get_all_profile_status():
     print(f"Lấy tất cả trạng thái profile")
-    response = requests.get(f"{MLX_LAUNCHER}/profile/statuses", headers=HEADERS)
+    try:
+        ssl_session = create_ssl_session()
+        response = ssl_session.get(f"{MLX_LAUNCHER}/profile/statuses")
+    except Exception as e:
+        print(f"SSL Error in get_all_profile_status: {e}")
+        response = requests.get(f"{MLX_LAUNCHER}/profile/statuses", headers=HEADERS, verify=False)
     print(response.json())
     if response.json()["status"]["http_code"] == 200:
         print(response.json())

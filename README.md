@@ -68,3 +68,17 @@ crawler-walmart/
 ./deploy.sh logs       # Xem logs
 ./deploy.sh backup     # Tạo backup
 ./deploy.sh cleanup    # Dọn dẹp
+
+# Dừng containers
+sudo docker-compose down
+
+# Hoặc xem logs của container cụ thể
+sudo docker-compose logs -f wm-mega
+sudo docker-compose logs -f mongodb
+
+# Hoặc xóa tất cả lock files
+sudo rm -f /tmp/.X*-lock
+
+sudo docker exec wm-mega-app /app/multilogin/extracted/opt/mlx/agent.bin
+
+sudo docker-compose logs -f wm-mega
