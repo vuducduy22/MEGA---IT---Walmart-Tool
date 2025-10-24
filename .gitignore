@@ -1,0 +1,15 @@
+test.py
+flask.log
+mlx.log
+.idea/
+__pycache__/config.cpython-310.pyc
+__pycache__/multix.cpython-310.pyc
+__pycache__/trademark_trie.cpython-310.pyc
+__pycache__/walmart.cpython-310.pyc
+error.log
+.env
+*.pyc
+
+# Google Drive API credentials (SECURITY)
+credentials.json
+token.json

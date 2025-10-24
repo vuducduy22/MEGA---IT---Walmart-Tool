@@ -1,0 +1,6 @@
+
+downloading   0% |                                          | ( 0/ 6 B) [0s:0s]                                                                               downloading 100% |████████████████████████████████| ( 6/ 6 B, 4.0 kB/s)
+downloading   0% |                                      | ( 0 B/6.2 kB) [0s:0s]                                                                               downloading 100% |█████████████████████████████| (6.2/6.2 kB, 756 kB/s)
+
+(agent.bin:138851): libayatana-appindicator-WARNING **: 14:57:59.241: libayatana-appindicator is deprecated. Please use libayatana-appindicator-glib in newly written code.
+downloading   0% |                                          | ( 0/ 7 B) [0s:0s]                                                                               downloading 100% |████████████████████████████████| ( 7/ 7 B, 5.4 kB/s)

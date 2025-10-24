@@ -1,0 +1,17 @@
+[Desktop Entry]
+Version=1.0
+Name=Multilogin X
+Name[ee]=Multilogin X ee
+Comment=Multilogin X for www
+Comment[ee]=Multilogin X ee for www
+GenericName=Multilogin X Agent
+GenericName[ee]=Multilogin X ee Agent
+Keywords=Multilogin X;Internet;WWW;Browser;Web;Explorer
+Icon=/opt/mlx/mlx.png
+Categories=WebBrowser
+Type=Application
+StartupNotify=true
+Terminal=false
+Exec=/opt/mlx/agent.bin %u
+Path=/opt/mlx/
+MimeType=x-scheme-handler/mlx;

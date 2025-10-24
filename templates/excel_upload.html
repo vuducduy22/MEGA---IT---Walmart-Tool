@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload và Download File Excel</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .excel-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #0056b3;
+            background: #e7f3ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #e7f7e7;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+
+        .upload-btn:hover {
+            background: #0056b3;
+        }
+
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .files-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .files-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .file-item {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            background: #f8f9fa;
+            transition: all 0.3s;
+        }
+
+        .file-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-orange {
+            background: #fd7e14;
+            color: white;
+        }
+
+        .btn-orange:hover {
+            background: #e8690b;
+        }
+
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading::before {
+            content: "⏳";
+            margin-right: 10px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+
+        .hidden {
+            display: none;
+        }
+        
+        /* Crawl Data Button */
+        .crawl-data-btn {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: normal;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .crawl-data-btn:hover {
+            background: linear-gradient(135deg, #138496, #117a8b);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .fill-data-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: normal;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .fill-data-btn:hover {
+            background: linear-gradient(135deg, #218838, #1e7e34);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            width: 90%;
+            height: 80%;
+            background: white;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .modal-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .popup-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 1001;
+            font-weight: bold;
+        }
+        
+        .popup-close-btn:hover {
+            background: #c82333;
+        }
+
+        /* Resizable modal styles */
+        .resizable-modal {
+            position: relative;
+        }
+
+        .resizable-modal::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 16px;
+            height: 16px;
+            cursor: se-resize;
+            background: linear-gradient(
+                135deg,
+                transparent 0%,
+                transparent 40%,
+                #bbb 40%,
+                #bbb 50%,
+                transparent 50%,
+                transparent 60%,
+                #bbb 60%,
+                #bbb 70%,
+                transparent 70%,
+                transparent 100%
+            );
+            background-size: 4px 4px;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .resizable-modal:hover::after {
+            opacity: 0.8;
+            background: linear-gradient(
+                135deg,
+                transparent 0%,
+                transparent 40%,
+                #888 40%,
+                #888 50%,
+                transparent 50%,
+                transparent 60%,
+                #888 60%,
+                #888 70%,
+                transparent 70%,
+                transparent 100%
+            );
+        }
+
+        /* Progress bar styles */
+        .progress-bar-container {
+            width: 200px;
+            height: 6px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0 auto;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9800, #ffb347);
+            border-radius: 3px;
+            width: 0%;
+            animation: progressAnimation 2s ease-in-out infinite;
+            box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+        }
+
+        @keyframes progressAnimation {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .file-item.deleting {
+            opacity: 0.6;
+            transform: scale(0.98);
+            background: #fff3e0 !important;
+        }
+
+        /* Files Grid Layout - 2 columns */
+        .files-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .files-column {
+            background: #fafafa;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            overflow: hidden;
+            min-width: 0; /* Cho phép flex shrink */
+        }
+
+        .column-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .files-column .files-list {
+            padding: 15px;
+            min-height: 200px;
+        }
+
+        .files-column .files-list:empty::after {
+            content: 'Chưa có file nào';
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 150px;
+            color: #999;
+            font-style: italic;
+        }
+
+        /* Cải thiện file item layout */
+        .file-item {
+            margin-bottom: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+            min-width: 0; /* Cho phép shrink */
+        }
+
+        .file-header {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+        }
+
+        .file-info-section {
+            flex: 1;
+            min-width: 0; /* Quan trọng cho text wrapping */
+        }
+
+        .file-name {
+            font-weight: bold;
+            color: #333;
+            word-wrap: break-word;
+            word-break: break-all;
+            line-height: 1.4;
+            margin-bottom: 5px;
+            cursor: help;
+            position: relative;
+        }
+
+        .file-name:hover {
+            color: #667eea;
+        }
+
+        /* Tooltip for long filenames */
+        .file-name[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: normal;
+            word-break: break-all;
+            max-width: 300px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 1200px) {
+            .files-grid {
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .files-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .file-header {
+                padding: 12px;
+            }
+            
+            .file-name {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .files-grid {
+                gap: 15px;
+            }
+            
+            .files-column .files-list {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="excel-container">
+        <h1 style="text-align: center; margin-bottom: 40px; color: #333;">
+            Upload và Download File Excel
+        </h1>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2 style="margin-bottom: 20px; color: #333;">Upload File Excel</h2>
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon"></div>
+                <div class="upload-text">Kéo thả file Excel vào đây hoặc click để chọn</div>
+                <div class="upload-subtext">Hỗ trợ: .xlsx, .xls, .csv (tối đa 100MB)</div>
+                <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" />
+            </div>
+            
+            <div style="display: flex; gap: 15px; justify-content: center; align-items: center; margin-top: 20px;">
+                <button id="uploadBtn" class="upload-btn" disabled style="margin-top: 0;">
+                    Upload File
+                </button>
+                <button class="crawl-data-btn" type="button" onclick="openCrawlDataModal()" style="margin-top: 0;">
+                    Danh sách crawl
+                </button>
+                <button class="fill-data-btn" type="button" onclick="openFillDataModal()" style="margin-top: 0;">
+                    Fill dữ liệu
+                </button>
+            </div>
+
+            <div id="uploadAlert" class="alert hidden"></div>
+        </div>
+
+        <!-- Files List Section -->
+        <div class="files-section">
+            <h2 style="margin-bottom: 20px; color: #333;">Quản Lý Files</h2>
+            
+            <div id="loading" class="loading hidden">
+                Đang tải danh sách files...
+            </div>
+            
+            <!-- Files Grid với 2 cột -->
+            <div class="files-grid">
+                <div class="files-column">
+                    <h3 class="column-header">Files Gốc (Upload)</h3>
+                    <div id="originalFilesList" class="files-list">
+                        <!-- Original files will be loaded here -->
+                    </div>
+                </div>
+                <div class="files-column">
+                    <h3 class="column-header">Files Đã Fill</h3>
+                    <div id="filledFilesList" class="files-list">
+                        <!-- Filled files will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadAlert = document.getElementById('uploadAlert');
+        const loading = document.getElementById('loading');
+        const originalFilesList = document.getElementById('originalFilesList');
+        const filledFilesList = document.getElementById('filledFilesList');
+
+        let selectedFile = null;
+        let loadFilesListTimeout = null; // For debouncing
+        let isLoadingFiles = false; // Prevent multiple simultaneous loads
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFilesList();
+        });
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadBtn.addEventListener('click', handleUpload);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect();
+            }
+        }
+
+        function handleFileSelect() {
+            const files = fileInput.files;
+            if (files.length > 0) {
+                selectedFile = files[0];
+                uploadBtn.disabled = false;
+                showAlert(`Đã chọn file: ${selectedFile.name} (${(selectedFile.size / 1024 / 1024).toFixed(2)} MB)`, 'success');
+            }
+        }
+
+        function handleUpload() {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Đang upload...';
+
+            fetch('/api/excel/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(`Upload thành công! File: ${data.file_info.filename}`, 'success');
+                    
+                    fileInput.value = '';
+                    selectedFile = null;
+                        
+                
+                    debouncedLoadFilesList(100);
+                } else {
+                    showAlert(`Lỗi upload: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                showAlert(`Lỗi mạng: ${error.message}`, 'error');
+            })
+            .finally(() => {
+                uploadBtn.disabled = true;
+                uploadBtn.textContent = 'Upload File';
+            });
+        }
+
+        function showAlert(message, type) {
+            uploadAlert.textContent = message;
+            uploadAlert.className = `alert alert-${type}`;
+            uploadAlert.classList.remove('hidden');
+            
+            setTimeout(() => {
+                uploadAlert.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Debounced version to prevent rapid successive calls
+        function debouncedLoadFilesList(delay = 300, isAfterDelete = false) {
+            clearTimeout(loadFilesListTimeout);
+            loadFilesListTimeout = setTimeout(() => {
+                loadFilesList(isAfterDelete);
+            }, delay);
+        }
+
+        function loadFilesList(isAfterDelete = false) {
+            // Prevent multiple simultaneous loads
+            if (isLoadingFiles) {
+                console.log('Files list already loading, skipping...');
+                return;
+            }
+            
+            isLoadingFiles = true;
+            loading.classList.remove('hidden');
+            
+            if (isAfterDelete) {
+                originalFilesList.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="color: #ff9800; margin-bottom: 10px;">Đang cập nhật...</div>
+                    </div>
+                `;
+                filledFilesList.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="color: #ff9800; margin-bottom: 10px;">Đang cập nhật...</div>
+                    </div>
+                `;
+            } else {
+                originalFilesList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Đang tải...</p>';
+                filledFilesList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Đang tải...</p>';
+            }
+
+            fetch('/api/excel/files')
+            .then(response => response.json())
+            .then(data => {
+                isLoadingFiles = false;
+                loading.classList.add('hidden');
+                
+                if (data.success && data.files.length > 0) {
+                    // Phân chia files thành 2 loại: gốc và đã fill
+                    const originalFiles = data.files.filter(file => !file.filename.includes('_filled_'));
+                    const filledFiles = data.files.filter(file => file.filename.includes('_filled_'));
+                    
+                    // Render original files
+                    if (originalFiles.length > 0) {
+                        originalFilesList.innerHTML = originalFiles.map(file => `
+                            <div class="file-item" data-filename="${file.filename}">
+                                <div class="file-header">
+                                    <div class="file-info-section">
+                                        <div class="file-name" title="${file.filename}">${file.filename}</div>
+                                        <div class="file-size">${file.file_size_mb} MB • ${new Date(file.upload_time).toLocaleString('vi-VN')}</div>
+                                    </div>
+                                    <div class="file-actions">
+                                        <button class="btn btn-orange" onclick="downloadExcelFile('${file.filename}', true)" title="Tải file Excel và tự động xóa khỏi server">
+                                            Download File
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        originalFilesList.innerHTML = '';
+                    }
+                    
+                    // Render filled files
+                    if (filledFiles.length > 0) {
+                        filledFilesList.innerHTML = filledFiles.map(file => `
+                            <div class="file-item" data-filename="${file.filename}">
+                                <div class="file-header">
+                                    <div class="file-info-section">
+                                        <div class="file-name" title="${file.filename}">${file.filename}</div>
+                                        <div class="file-size">${file.file_size_mb} MB • ${new Date(file.upload_time).toLocaleString('vi-VN')}</div>
+                                    </div>
+                                    <div class="file-actions">
+                                        <button class="btn btn-orange" onclick="downloadExcelFile('${file.filename}', true)" title="Tải file Excel và tự động xóa khỏi server">
+                                            Download File
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        filledFilesList.innerHTML = '';
+                    }
+                } else {
+                    originalFilesList.innerHTML = '';
+                    filledFilesList.innerHTML = '';
+                }
+            })
+            .catch(error => {
+                loading.classList.add('hidden');
+                isLoadingFiles = false;
+                originalFilesList.innerHTML = '<p style="text-align: center; color: #dc3545; padding: 40px;">Lỗi tải danh sách files</p>';
+                filledFilesList.innerHTML = '<p style="text-align: center; color: #dc3545; padding: 40px;">Lỗi tải danh sách files</p>';
+            });
+        }
+
+
+        function downloadExcelFile(filename, autoDelete = false) {
+            if (autoDelete) {
+                const fileElement = document.querySelector(`[data-filename="${filename}"]`);
+                if (fileElement) {
+                    fileElement.classList.add('deleting');
+                    const fileActions = fileElement.querySelector('.file-actions');
+                    if (fileActions) {
+                        fileActions.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 8px;">
+                                <div class="progress-bar-container" style="width: 120px;">
+                                    <div class="progress-bar-fill"></div>
+                                </div>
+                                <span style="color: #ff9800; font-weight: bold;">Đang xóa...</span>
+                            </div>
+                        `;
+                    }
+                }
+                
+                fetch(`/api/excel/download-and-delete/${filename}`, {
+                    method: 'POST'
+                })
+                .then(response => {
+                    console.log('Download response status:', response.status);
+                    if (response.ok) {
+                        return response.blob().then(blob => {
+                            console.log('Blob size:', blob.size);
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                            
+                            showAlert(`Đã tải và xóa file "${filename}" thành công!`, 'success');
+                            
+                            // Ẩn file ngay lập tức để UX tốt hơn
+                            const fileElement = document.querySelector(`[data-filename="${filename}"]`);
+                            if (fileElement) {
+                                fileElement.style.transition = 'all 0.5s ease';
+                                fileElement.style.opacity = '0';
+                                fileElement.style.transform = 'scale(0.9)';
+                                
+                                // Remove from DOM sau animation
+                                setTimeout(() => {
+                                    if (fileElement.parentNode) {
+                                        fileElement.parentNode.removeChild(fileElement);
+                                    }
+                                }, 500);
+                            }
+                            
+                            debouncedLoadFilesList(2500, true);
+                        });
+                    } else {
+                        return response.text().then(text => {
+                            console.error('Server response:', text);
+                            let errorMsg = 'Lỗi khi tải file';
+                            try {
+                                const errorJson = JSON.parse(text);
+                                errorMsg = errorJson.error || errorMsg;
+                            } catch(e) {
+                                console.error('Cannot parse error JSON:', e);
+                            }
+                            throw new Error(errorMsg);
+                        });
+                    }
+                })
+                .catch(error => {
+                    showAlert(`Lỗi: ${error.message}`, 'error');
+                    
+                    // Reset visual feedback on error
+                    const fileElement = document.querySelector(`[data-filename="${filename}"]`);
+                    if (fileElement) {
+                        fileElement.classList.remove('deleting');
+                    }
+                    
+                    // Reload file list to restore original state
+                    debouncedLoadFilesList(500);
+                });
+            } else {
+                const url = `/api/excel/download/${filename}?auto_delete=false`;
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                showAlert(`Đang tải file "${filename}"...`, 'success');
+            }
+        }
+        
+        // Crawl Data Modal Functions
+        function openCrawlDataModal() {
+            document.getElementById('crawlDataModal').style.display = 'flex';
+        }
+        
+        function closeCrawlDataModal() {
+            document.getElementById('crawlDataModal').style.display = 'none';
+        }
+
+        // Fill Data Modal Functions
+        function openFillDataModal() {
+            document.getElementById('fillDataModal').style.display = 'flex';
+            loadFilesForFill();
+            loadCollectionsForFill();
+        }
+        
+        function closeFillDataModal() {
+            document.getElementById('fillDataModal').style.display = 'none';
+        }
+
+        // Load files for fill data
+        async function loadFilesForFill() {
+            try {
+                const response = await fetch('/api/excel/files');
+                const data = await response.json();
+                
+                const fileSelect = document.getElementById('fileSelect');
+                fileSelect.innerHTML = '<option value="">-- Chọn file --</option>';
+                
+                if (data.files && data.files.length > 0) {
+                    data.files.forEach(file => {
+                        const option = document.createElement('option');
+                        option.value = file.filename;
+                        option.textContent = `${file.filename} (${file.size})`;
+                        fileSelect.appendChild(option);
+                    });
+                    console.log(`Loaded ${data.files.length} files`);
+                } else {
+                    // Thêm option thông báo không có file
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = "Không có file nào đã upload";
+                    option.disabled = true;
+                    fileSelect.appendChild(option);
+                    console.warn('No files found');
+                }
+            } catch (error) {
+                console.error('Error loading files:', error);
+                // Thêm option thông báo lỗi
+                const fileSelect = document.getElementById('fileSelect');
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "Lỗi tải danh sách file";
+                option.disabled = true;
+                fileSelect.appendChild(option);
+            }
+        }
+
+        // Load collections for fill data
+        async function loadCollectionsForFill() {
+            try {
+                const response = await fetch('/api/collections');
+                const data = await response.json();
+                
+                const collectionSelect = document.getElementById('collectionSelect');
+                collectionSelect.innerHTML = '<option value="">-- Chọn collection --</option>';
+                
+                if (data.success && data.collections && data.collections.length > 0) {
+                    data.collections.forEach(collection => {
+                        const option = document.createElement('option');
+                        option.value = collection;
+                        option.textContent = collection;
+                        collectionSelect.appendChild(option);
+                    });
+                    console.log(`Loaded ${data.collections.length} collections:`, data.collections);
+                } else {
+                    // Thêm option thông báo lỗi
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = data.error || "Không tìm thấy collection nào";
+                    option.disabled = true;
+                    collectionSelect.appendChild(option);
+                    console.warn('No collections found or error:', data.error);
+                }
+            } catch (error) {
+                console.error('Error loading collections:', error);
+                // Thêm option thông báo lỗi kết nối
+                const collectionSelect = document.getElementById('collectionSelect');
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "Lỗi kết nối database";
+                option.disabled = true;
+                collectionSelect.appendChild(option);
+            }
+        }
+
+        // Start fill data process
+        async function startFillData() {
+            const filename = document.getElementById('fileSelect').value;
+            const collection = document.getElementById('collectionSelect').value;
+            const column = document.getElementById('columnInput').value;
+            const skuColumn = document.getElementById('skuColumnInput').value;
+            const batchColumn = document.getElementById('batchColumnInput').value;
+            const imageColumn = document.getElementById('imageColumnInput').value;
+            const fillImagesFromDrive = document.getElementById('fillImagesFromDrive').checked;
+            const startRow = document.getElementById('startRowInput').value;
+            const fillMode = document.querySelector('input[name="fillMode"]:checked').value;
+
+            if (!filename) {
+                alert('Vui lòng chọn file Excel!');
+                return;
+            }
+
+            if (!collection) {
+                alert('Vui lòng chọn collection!');
+                return;
+            }
+
+            if (!column || column.trim() === '') {
+                alert('Vui lòng nhập cột Product Name (VD: E, F, G...)!');
+                return;
+            }
+
+            if (!skuColumn || skuColumn.trim() === '') {
+                alert('Vui lòng nhập cột SKU (VD: A, C, D...)!');
+                return;
+            }
+
+            if (!batchColumn || batchColumn.trim() === '') {
+                alert('Vui lòng nhập cột Batch ID (VD: CU, CX, CY...)!');
+                return;
+            }
+
+            if (fillImagesFromDrive && (!imageColumn || imageColumn.trim() === '')) {
+                alert('Vui lòng nhập cột Images (VD: T, U, V...) hoặc tắt tính năng fill ảnh!');
+                return;
+            }
+
+            // Validate không trùng nhau
+            const columns = [column.trim().toUpperCase(), skuColumn.trim().toUpperCase(), batchColumn.trim().toUpperCase()];
+            if (fillImagesFromDrive) {
+                columns.push(imageColumn.trim().toUpperCase());
+            }
+            const uniqueColumns = [...new Set(columns)];
+            if (columns.length !== uniqueColumns.length) {
+                alert('Các cột không được trùng nhau!');
+                return;
+            }
+
+            // Show progress with different message based on mode
+            document.getElementById('fillProgress').style.display = 'block';
+            if (fillMode === 'duplicate') {
+                document.getElementById('fillStatus').textContent = 'Đang phân tích sản phẩm unique và duplicate structure + sinh SKU + Batch ID...';
+            } else {
+                document.getElementById('fillStatus').textContent = 'Đang phân tích file Excel, lấy dữ liệu từ database và sinh SKU + Batch ID...';
+            }
+
+            try {
+                const response = await fetch('/api/excel/fill-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        filename: filename,
+                        collection: collection,
+                        column: column,
+                        sku_column: skuColumn.trim().toUpperCase(),
+                        batch_column: batchColumn.trim().toUpperCase(),
+                        image_column: fillImagesFromDrive ? imageColumn.trim().toUpperCase() : 'T',
+                        fill_images_from_drive: fillImagesFromDrive,
+                        start_row: parseInt(startRow),
+                        fill_mode: fillMode
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    let statusMessage = '';
+                    if (result.fill_mode === 'duplicate') {
+                        statusMessage = `
+                            Hoàn thành chế độ Duplicate!<br>
+                            ${result.message}<br>
+                            File mới: ${result.new_filename}
+                        `;
+                    } else {
+                        statusMessage = `
+                            Hoàn thành chế độ Repeat!<br>
+                            Đã phát hiện ${result.total_rows_detected} dòng ban đầu<br>
+                            Fill ${result.filled_count} dòng vào cột ${result.column} (Product Name), ${result.sku_column} (SKU) và ${result.batch_column} (Batch ID)<br>
+                            Batch ID: <strong>${result.batch_id}</strong> | Phạm vi: dòng ${result.start_row}-${result.end_row}
+                        `;
+                    }
+                    
+                    document.getElementById('fillStatus').innerHTML = `
+                        ${statusMessage}<br>
+                        <div style="margin-top: 15px; padding: 10px; background: #e8f5e8; border-radius: 6px; font-size: 13px; color: #2e7d32; text-align: center;">
+                            💡 File đã được fill thành công! Kiểm tra ở danh sách bên dưới để tải về
+                        </div>
+                    `;
+                    
+                    debouncedLoadFilesList(500);
+                    console.log('Auto refreshed file list after fill data');
+                } else {
+                    document.getElementById('fillStatus').textContent = `Lỗi: ${result.error}`;
+                }
+            } catch (error) {
+                console.error('Error filling data:', error);
+                document.getElementById('fillStatus').textContent = 'Lỗi khi fill dữ liệu';
+            }
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const crawlModal = document.getElementById('crawlDataModal');
+            const fillModal = document.getElementById('fillDataModal');
+            
+            if (event.target === crawlModal) {
+                closeCrawlDataModal();
+            }
+            
+            if (event.target === fillModal) {
+                closeFillDataModal();
+            }
+        }
+
+    </script>
+    
+        <!-- Crawl Data Modal -->
+        <div class="modal-overlay" id="crawlDataModal">
+            <div class="modal-content resizable-modal" style="width: 90%; height: 80%; min-width: 600px; min-height: 400px; max-width: 95vw; max-height: 95vh; resize: both; overflow: hidden;">
+                <button class="popup-close-btn" type="button" onclick="closeCrawlDataModal()">✖</button>
+                <iframe src="/crawl-list" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+
+        <!-- Fill Data Modal -->
+        <div class="modal-overlay" id="fillDataModal">
+            <div class="modal-content resizable-modal" style="width: 600px; height: 500px; min-width: 400px; min-height: 300px; max-width: 90vw; max-height: 90vh; resize: both; overflow: auto;">
+                <button class="popup-close-btn" type="button" onclick="closeFillDataModal()">✖</button>
+                <div style="padding: 30px;">
+                    <h3 style="margin: 0 0 10px 0; color: #333;">Fill Dữ Liệu Vào Excel</h3>
+                    <div style="margin-bottom: 20px;">
+                        <p style="color: #666; margin-bottom: 8px;">Chọn file Excel và collection để tự động fill tên sản phẩm vào cột E từ dòng 7</p>
+                        <small style="color: #999; font-size: 11px;">Tip: Kéo góc dưới bên phải để thay đổi kích thước cửa sổ</small>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold;">Chọn File Excel:</label>
+                        <select id="fileSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">-- Chọn file --</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold;">Chọn Collection:</label>
+                        <select id="collectionSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">-- Chọn collection --</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold;">Cột điền dữ liệu:</label>
+                        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                            <div>
+                                <span style="color: #666; font-size: 14px;">Product Name:</span>
+                                <input type="text" id="columnInput" value="E" style="width: 50px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-left: 5px;" placeholder="E">
+                            </div>
+                            <div>
+                                <span style="color: #666; font-size: 14px;">SKU:</span>
+                                <input type="text" id="skuColumnInput" value="A" style="width: 50px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-left: 5px;" placeholder="A">
+                            </div>
+                            <div>
+                                <span style="color: #666; font-size: 14px;">Batch ID:</span>
+                                <input type="text" id="batchColumnInput" value="CU" style="width: 50px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-left: 5px;" placeholder="CU">
+                            </div>
+                            <div>
+                                <span style="color: #666; font-size: 14px;">Images:</span>
+                                <input type="text" id="imageColumnInput" value="T" style="width: 50px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-left: 5px;" placeholder="T">
+                            </div>
+                            <div>
+                                <span style="color: #666; font-size: 14px;">Bắt đầu từ dòng:</span>
+                                <input type="number" id="startRowInput" value="7" style="width: 60px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-left: 5px;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <label style="display: flex; align-items: center; cursor: pointer; user-select: none;">
+                                <input type="checkbox" id="fillImagesFromDrive" style="margin-right: 8px;">
+                                <span style="color: #666; font-size: 14px;">📷 Fill ảnh từ Google Drive theo tên sản phẩm</span>
+                            </label>
+                            <small style="color: #999; font-size: 11px; margin-left: 24px; display: block; margin-top: 5px;">
+                                Tự động tìm folder trên Google Drive có tên giống product name và fill ảnh vào cột Images
+                            </small>
+                        </div>
+                        <small style="color: #999; font-size: 12px; margin-top: 8px; display: block;">
+                            Batch ID: Tất cả dòng trong file sẽ có cùng mã 5 ký tự (mỗi lần fill sẽ tạo mã mới)
+                        </small>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #28a745;">Tự động fill:</label>
+                        <span style="color: #666; font-size: 14px;">Hệ thống sẽ tự động phát hiện dòng cuối của Excel và fill đầy từ dòng bắt đầu đến hết file</span>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold;">Chế độ fill:</label>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="fillMode" value="repeat" checked style="margin: 0;">
+                                <span>Lặp lại tên sản phẩm (mặc định)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="fillMode" value="duplicate" style="margin: 0;">
+                                <span>Duplicate dòng cho từng sản phẩm khác nhau</span>
+                            </label>
+                        </div>
+                        <small style="color: #999; font-size: 12px; margin-top: 5px; display: block;">
+                            Chế độ duplicate sẽ copy toàn bộ structure cho mỗi sản phẩm unique
+                        </small>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="btn" onclick="closeFillDataModal()" style="background: #6c757d; color: white;">Hủy</button>
+                        <button class="btn" onclick="startFillData()" style="background: #28a745; color: white;">Bắt Đầu Fill</button>
+                    </div>
+
+                    <div id="fillProgress" style="margin-top: 20px; display: none;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+                            <div>Đang fill dữ liệu...</div>
+                            <div id="fillStatus" style="margin-top: 10px; color: #666;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+</body>
+</html>

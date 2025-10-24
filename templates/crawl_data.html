@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách sản phẩm</title>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid #ddd; }
+        th, td { padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .pagination {
+        margin-top: 20px;
+        text-align: center;
+        position: fixed;
+        top: 0px;
+        right: 50px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 8px 12px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .pagination button { margin: 0 5px; padding: 5px 10px; }
+        .filter-buttons {margin-top: 20px; text-align: center;}
+        .filter-buttons button { margin: 0 5px; padding: 5px 10px; }
+        .ts-dropdown-content {
+          max-height: 300px;
+        }
+    /* Thêm vào phần style hiện có */
+    .note-input {
+        width: 100%;
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .note-input:focus {
+        outline: none;
+        border-color: #4CAF50;
+    }
+</style>
+</head>
+<body>
+
+    <h1>Danh sách Sản phẩm</h1>
+
+    <!-- Bộ lọc sản phẩm -->
+    <div style=" display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" class="filter-buttons">
+        <select style="max-width:225px; width:225px; max-height: 15px;" id="collection-select" onchange="changeCollection()" placeholder="Chọn hoặc nhập collection">
+        </select>
+        <input type="number" id="min-price" placeholder="Giá tối thiểu">
+        <input type="number" id="max-price" placeholder="Giá tối đa">
+        <button onclick="changeFilter('all')">làm mới</button>
+<!--        <button onclick="changeFilter('variant')">Sản phẩm Biến thể</button>-->
+<!--        <button onclick="changeFilter('single')">Sản phẩm Đơn lẻ</button>-->
+        <input type="checkbox" id="reseller-checkbox"> có seller options
+        <button onclick="exportTableToCSV()">Xuất CSV</button>
+        <button onclick="openTrademarkModal()" style="background: #ff6b6b; color: white; border: none; padding: 8px 12px; border-radius: 4px;">🔒 Quản lý Trademark</button>
+    </div>
+
+    <!-- Trademark Management Modal -->
+    <div id="trademark-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; padding: 20px; box-sizing: border-box;">
+        <div style="position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 12px; max-width: 650px; width: 100%; max-height: 85vh; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <!-- Close button inside modal with absolute positioning -->
+            <button id="trademark-close-btn" onclick="closeTrademarkModal()" style="
+                position: absolute !important; 
+                top: 15px !important; 
+                right: 15px !important; 
+                background: #dc3545 !important; 
+                color: white !important; 
+                border: none !important; 
+                border-radius: 50% !important; 
+                width: 32px !important; 
+                height: 32px !important; 
+                font-size: 16px !important; 
+                cursor: pointer !important; 
+                display: flex !important; 
+                align-items: center !important; 
+                justify-content: center !important;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+                z-index: 10002 !important;
+                font-weight: 900 !important;
+                font-family: Arial, sans-serif !important;
+                line-height: 1 !important;
+                transition: all 0.2s ease !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            ">✕</button>
+            
+            <!-- Modal Header -->
+            <div style="margin-bottom: 20px; padding-right: 50px;">
+                <h2 style="margin: 0; color: #333; font-size: 24px;">🔒 Quản lý Trademark IDs</h2>
+            </div>
+
+            <!-- Modal Body with scroll -->
+            <div style="max-height: calc(85vh - 120px); overflow-y: auto; padding-right: 10px;">
+
+            <!-- Add Single ID -->
+            <div style="margin-bottom: 25px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3 style="margin-top: 0; color: #555;">➕ Thêm ID đơn lẻ</h3>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="single-id-input" placeholder="Nhập Item ID (ví dụ: 12345)" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <button onclick="addSingleId()" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Thêm</button>
+                </div>
+                <div id="add-result" style="margin-top: 10px; font-size: 14px;"></div>
+            </div>
+
+            <!-- Upload Excel -->
+            <div style="margin-bottom: 25px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3 style="margin-top: 0; color: #555;">📁 Upload file Excel</h3>
+                <input type="file" id="excel-file-input" accept=".xlsx,.xls" style="margin-bottom: 10px;">
+                <button onclick="uploadExcel()" style="background: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Upload</button>
+                <div id="upload-result" style="margin-top: 10px; font-size: 14px;"></div>
+            </div>
+
+            <!-- Current IDs -->
+            <div style="padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3 style="margin-top: 0; color: #555;">📋 Danh sách hiện tại (<span id="ids-count">0</span> IDs)</h3>
+                
+                <!-- Search and controls -->
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" id="trademark-search" placeholder="🔍 Tìm kiếm ID..." 
+                           style="flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"
+                           oninput="filterTrademarkList()" />
+                    
+                    <button onclick="refreshTrademarkList()" 
+                            style="background: #FF9800; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; white-space: nowrap;">
+                        🔄 Refresh
+                    </button>
+                    
+                    <button id="clear-search-btn" onclick="clearTrademarkSearch()" 
+                            style="background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: none;">
+                        ✕ Clear
+                    </button>
+                </div>
+                
+                <!-- Search results info -->
+                <div id="search-info" style="display: none; margin-bottom: 10px; padding: 8px 12px; background: #e3f2fd; border-radius: 4px; font-size: 14px; color: #1976d2;">
+                </div>
+                
+                <div id="trademark-list" style="max-height: 220px; overflow-y: auto; background: #f9f9f9; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 13px; line-height: 1.4; border: 1px solid #e0e0e0;">
+                    Đang tải...
+                </div>
+            </div>
+
+            </div> <!-- End Modal Body -->
+        </div>
+    </div>
+    <script>
+        function changeFilter(filter) {
+            currentFilter = filter;
+            currentPage = 1;
+
+            // Lấy giá min và max từ input
+            const minPrice = document.getElementById('min-price').value;
+            const maxPrice = document.getElementById('max-price').value;
+            fetchProducts(currentPage, currentFilter, minPrice, maxPrice);
+        }
+    </script>
+
+    <!-- Khu vực hiển thị bảng sản phẩm -->
+    <table id="product-table">
+        <thead>
+            <tr>
+                <th>Hình ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th>Sku</th>
+                <th>UPC</th>
+                <th>Màu sắc</th>
+                <th>Kích thước</th>
+                <th>Giá</th>
+                <th>seller options</th>
+                <th>Ngày thêm</th>
+                <th>Note</th>
+                <th>Trademark</th> 
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Các hàng sản phẩm sẽ được chèn vào đây -->
+        </tbody>
+    </table>
+
+    <!-- Thanh phân trang -->
+    <div class="pagination" id="pagination">
+        <button id="first-page">Trang đầu</button>
+        <button id="prev-page" disabled>Trang trước</button>
+
+        <span id="current-page"></span>
+
+        <input type="number" id="page-input" style="width: 60px;" min="1" placeholder="Tới trang">
+
+        <button id="next-page" disabled>Trang sau</button>
+        <button id="last-page">Trang cuối</button>
+    </div>
+
+    <!-- Thêm div cho progress -->
+    <div id="export-progress" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0, 0, 0, 0.5); z-index: 9999;">
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            min-width: 300px; text-align: center;">
+            <h3 style="margin-top: 0;">Đang xuất CSV...</h3>
+            <div style="margin: 20px 0;">
+                <div id="progress-bar" style="width: 100%; height: 20px; background: #f0f0f0; border-radius: 10px; overflow: hidden;">
+                    <div id="progress-fill" style="width: 0%; height: 100%; background: #4CAF50; transition: width 0.3s;"></div>
+                </div>
+            </div>
+            <p id="progress-text" style="margin-bottom: 0;">Đang xử lý trang 0/0</p>
+        </div>
+    </div>
+
+    <script>
+     async function exportTableToCSV(filename = 'products_export.csv') {
+         let allProducts = [];
+         let page = 1;
+         let totalPages = 1;
+
+         const minPrice = document.getElementById('min-price')?.value;
+         const maxPrice = document.getElementById('max-price')?.value;
+         const resellerOnly = document.getElementById('reseller-checkbox')?.checked;
+
+         // Hiển thị progress
+         const progressDiv = document.getElementById('export-progress');
+         const progressFill = document.getElementById('progress-fill');
+         const progressText = document.getElementById('progress-text');
+         
+         // Reset và hiển thị progress
+         progressFill.style.width = '0%';
+         progressText.textContent = 'Đang xử lý trang 0/0';
+         progressDiv.style.display = 'block';
+
+         // Tạo URL query
+         const buildURL = (page) => {
+             let url = `/api/products?page=${page}&collection=${currentCollection}`;
+             if (currentFilter !== 'all') url += `&type=${currentFilter}`;
+             if (minPrice) url += `&min_price=${minPrice}`;
+             if (maxPrice) url += `&max_price=${maxPrice}`;
+             if (resellerOnly) url += `&resellerOnly=true`;
+             return url;
+         };
+
+         try {
+             // Lặp qua tất cả các trang
+             do {
+                 const res = await fetch(buildURL(page));
+                 const data = await res.json();
+
+                 if (data.products && data.products.length > 0) {
+                     allProducts.push(...data.products);
+                 }
+
+                 totalPages = data.total_pages;
+                 
+                 // Cập nhật progress
+                 const progress = (page / totalPages) * 100;
+                 progressFill.style.width = `${progress}%`;
+                 progressText.textContent = `Đang xử lý trang ${page}/${totalPages}`;
+                 
+                 page++;
+             } while (page <= totalPages);
+
+             // Chuyển đổi sang CSV
+             const headers = ['name', 'SKU', 'UPC', 'color', 'size', 'price', 'time', 'Seller Options', 'note', 'Trademark', 'Link'];
+             const rows = [headers];
+
+             allProducts.forEach(product => {
+                 const sellerText = product.reseller?.map(r =>
+                     `${r.seller}: ${r.price} - ${r.shipping} (${r.retailer})`
+                 ).join(' | ') || '';
+
+                    // Helper function to format numbers as text to prevent scientific notation
+                const formatAsText = (value) => {
+                    if (!value || value === 'N/A' || value === '') return '';
+                    const numStr = String(value);
+                    if (/^\d+$/.test(numStr)) {
+                        return `="${numStr}"`;
+                    }
+                    return numStr;
+                };
+
+                // Debug: log the SKU and UPC data
+                console.log('SKU:', product.sku, 'Type:', typeof product.sku);
+                console.log('UPC (gtin13):', product.gtin13, 'Type:', typeof product.gtin13);
+
+                rows.push([
+                    product.name,
+                    formatAsText(product.sku),
+                    formatAsText(product.gtin13),
+                    product.color || '-',
+                    product.size || '-',
+                    product.price,
+                    product.timestamp,
+                    sellerText,
+                    product.note,
+                    product.trademark,
+                    product.link
+                ]);
+             });
+
+             // Xuất ra CSV
+             const csvContent = rows.map(row => row.map(cell => `"${(cell + '').replace(/"/g, '""')}"`).join(',')).join('\n');
+             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+             const link = document.createElement('a');
+             const url = URL.createObjectURL(blob);
+             link.setAttribute('href', url);
+             link.setAttribute('download', filename);
+             document.body.appendChild(link);
+             link.click();
+             document.body.removeChild(link);
+
+             // Ẩn progress sau khi hoàn thành
+             progressDiv.style.display = 'none';
+
+         } catch (err) {
+             console.error('Lỗi khi export CSV:', err);
+             alert('Có lỗi xảy ra khi xuất CSV!');
+             // Ẩn progress nếu có lỗi
+             progressDiv.style.display = 'none';
+         }
+     }
+    </script>
+    <script>
+        let currentPage = 1;
+        let currentFilter = 'all';
+        let totalPages = 1;
+        let currentCollection = 'products';
+
+        async function loadCollections() {
+            try {
+                const response = await fetch('/collections');
+                const data = await response.json();
+                const select = document.getElementById('collection-select');
+
+                const collections = data.collections;
+                if (collections.length === 0) {
+                    console.warn('Không có collection nào.');
+                    return;
+                }
+
+
+                // Nếu TomSelect đã được khởi tạo
+                if (window.collectionSelect) {
+                    const tomSelect = window.collectionSelect;
+
+                    // Xoá hết option cũ, giữ lại placeholder
+                    tomSelect.clearOptions();
+
+                    // Thêm lại options
+                    collections.forEach(col => {
+                        tomSelect.addOption({ value: col, text: col });
+                    });
+
+                    tomSelect.refreshOptions(false);
+                } else {
+                    // Chỉ khởi tạo TomSelect một lần duy nhất
+                    select.innerHTML = 'chọn hoặc tìm kiếm';
+
+                    collections.forEach(col => {
+                        const option = document.createElement('option');
+                        option.value = col;
+                        option.textContent = col;
+                        select.appendChild(option);
+                    });
+
+                    window.collectionSelect = new TomSelect('#collection-select', {
+                        create: false,
+                        allowEmptyOption: true,
+                        onInitialize: function () {
+                            this.setValue("");
+
+                            // Gắn sự kiện click để load lại collections
+                            this.control_input.addEventListener('click', () => {
+                                setTimeout(loadCollections, 200);
+                            });
+                        }
+                    });
+                }
+
+            } catch (error) {
+                console.error('Lỗi khi load collections:', error);
+            }
+        }
+
+
+        function changeCollection() {
+            const select = document.getElementById('collection-select');
+            currentCollection = select.value;
+            fetchProducts(1, currentFilter);
+        }
+
+        async function fetchProducts(page = 1, filter = 'all') {
+            const minPrice = document.getElementById('min-price')?.value;
+            const maxPrice = document.getElementById('max-price')?.value;
+            const resellerOnly = document.getElementById('reseller-checkbox')?.checked;
+
+            let url = `/api/products?page=${page}&collection=${currentCollection}`;
+            if (filter !== 'all') url += `&type=${filter}`;
+            if (minPrice) url += `&min_price=${minPrice}`;
+            if (maxPrice) url += `&max_price=${maxPrice}`;
+            if (resellerOnly) url += `&resellerOnly=true`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const tableBody = document.querySelector('#product-table tbody');
+                tableBody.innerHTML = '';
+
+                if (!data.products || data.products.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="9">Không tìm thấy sản phẩm.</td></tr>';
+                } else {
+                    data.products.forEach(product => {
+                        const row = document.createElement('tr');
+                        const resellerInfo = product.reseller?.map(r =>
+                            `<a href="${r.retailer}" target="_blank">${r.seller}</a>: ${r.price} - ${r.shipping}`
+                        ).join('<br>') || '';
+                        
+                        row.innerHTML = `
+                            <td><img src="${product.image || 'https://via.placeholder.com/150'}" style="height:50px;"></td>
+                            <td style="padding: 0; width: 400px;"><a href="${product.link}" target="_blank">${product.name}</a></td>
+                            <td>${product.sku}</td>
+                            <td>${product.gtin13}</td>
+                            <td>${product.color || '-'}</td>
+                            <td>${product.size || '-'}</td>
+                            <td>$${product.price}</td>
+                            <td>${resellerInfo}</td>
+                            <td>${product.timestamp}</td>
+                            <td style="padding: 0;">
+                                <textarea class="note-input"
+                                          data-link="${product.link}"
+                                          placeholder="Nhập ghi chú"
+                                          style="
+                                              width: 300px;
+                                              box-sizing: border-box;
+                                              border: none;
+                                              padding: 6px;
+                                          ">${product.note || ''}</textarea>
+                            </td>
+                            <td>
+                                ${product.trademark === 'trademark' 
+                                    ? `<span style="color:red; font-weight:bold;">Trademark</span>` 
+                                    : `<span style="color:green;">Clear</span>`
+                                }
+                                ${product.entity_warning === 'warning' 
+                                    ? `<i class="fas fa-exclamation-triangle" style="color:orange; margin-left:5px;" title="Entity Warning"></i>` 
+                                    : ''
+                                }
+                                    ${product.brand_entity_warning === 'warning' 
+                                    ? `<i class="fas fa-exclamation-triangle" style="color:purple; margin-left:5px;" title="Brand Entity Warning"></i>` 
+                                    : ''
+                                }
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                }
+
+                currentPage = data.page;
+                totalPages = data.total_pages;
+                document.getElementById('current-page').textContent = `Trang ${currentPage} / ${totalPages}`;
+                document.getElementById('prev-page').disabled = currentPage === 1;
+                document.getElementById('next-page').disabled = currentPage === totalPages;
+
+            } catch (error) {
+                console.error('Lỗi khi fetch sản phẩm:', error);
+            }
+        }
+                document.getElementById('first-page').addEventListener('click', () => {
+            if (currentPage > 1) fetchProducts(1, currentFilter);
+        });
+
+        document.getElementById('last-page').addEventListener('click', () => {
+            if (currentPage < totalPages) fetchProducts(totalPages, currentFilter);
+        });
+
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (currentPage > 1) fetchProducts(currentPage - 1, currentFilter);
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            if (currentPage < totalPages) fetchProducts(currentPage + 1, currentFilter);
+        });
+
+        document.getElementById('reseller-checkbox').addEventListener('change', () => {
+            const resellerOnly = document.getElementById('reseller-checkbox').checked;
+            fetchProducts(1, currentFilter, resellerOnly); // quay lại trang 1 mỗi lần filter thay đổi
+        });
+
+        document.getElementById('page-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const value = parseInt(e.target.value);
+                if (!isNaN(value) && value >= 1 && value <= totalPages) {
+                    fetchProducts(value, currentFilter);
+                }
+            }
+        });
+
+        document.getElementById('page-input').addEventListener('change', (e) => {
+            const value = parseInt(e.target.value);
+            if (!isNaN(value) && value >= 1 && value <= totalPages) {
+                fetchProducts(value, currentFilter);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCollections(); // Chạy khi trang vừa load
+        });
+    </script>
+<!--note script-->
+    <script>
+        function saveNote(link, note) {
+            fetch('/api/products/note', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    link: link,                // Gửi link của sản phẩm
+                    note: note,
+                    collection: currentCollection // Gửi collection
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Note đã được lưu');
+                } else {
+                    console.error('Lỗi khi lưu Note:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi:', error);
+            });
+        }
+
+        // Sự kiện thay đổi trong bảng
+        let typingTimer;
+        const doneTypingInterval = 1000; // 1 giây
+
+        document.querySelector('#product-table').addEventListener('keyup', (e) => {
+            if (e.target.classList.contains('note-input')) {
+                clearTimeout(typingTimer);
+                const input = e.target;
+                const link = input.dataset.link;
+
+                typingTimer = setTimeout(() => {
+                    const note = input.value.trim();
+                    console.log('Auto-saving note after 1s inactivity...');
+                    saveNote(link, note);
+                }, doneTypingInterval);
+
+                if (e.key === 'Enter') {
+                    clearTimeout(typingTimer); // tránh gọi saveNote hai lần
+                    const note = input.value.trim();
+                    console.log('Đã nhấn Enter!');
+                    saveNote(link, note);
+                }
+            }
+        });
+
+        document.querySelector('#product-table').addEventListener('blur', (e) => {
+            if (e.target.classList.contains('note-input')) {
+                clearTimeout(typingTimer); // clear nếu còn timer
+                const input = e.target;
+                const link = input.dataset.link;
+                const note = input.value.trim();
+                console.log('Auto-saving note on blur...');
+                saveNote(link, note);
+            }
+        }, true); // dùng `true` để bắt sự kiện từ capture phase
+
+
+    </script>
+
+    <!-- Trademark Management Scripts -->
+    <script>
+        // Modal functions
+        function openTrademarkModal() {
+            document.getElementById('trademark-modal').style.display = 'block';
+            refreshTrademarkList(); // Load current IDs
+        }
+
+        function closeTrademarkModal() {
+            document.getElementById('trademark-modal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('trademark-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTrademarkModal();
+            }
+        });
+
+        // Add single ID
+        async function addSingleId() {
+            const input = document.getElementById('single-id-input');
+            const resultDiv = document.getElementById('add-result');
+            const id = input.value.trim();
+
+            if (!id) {
+                resultDiv.innerHTML = '<span style="color: red;">❌ Vui lòng nhập ID</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/trademark/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `<span style="color: green;">✅ ${result.message} (Tổng: ${result.total})</span>`;
+                    input.value = ''; // Clear input
+                    refreshTrademarkList(); // Refresh list
+                } else {
+                    resultDiv.innerHTML = `<span style="color: red;">❌ ${result.message}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span style="color: red;">❌ Lỗi: ${error.message}</span>`;
+            }
+        }
+
+        // Upload Excel
+        async function uploadExcel() {
+            const fileInput = document.getElementById('excel-file-input');
+            const resultDiv = document.getElementById('upload-result');
+            
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = '<span style="color: red;">❌ Vui lòng chọn file Excel</span>';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                resultDiv.innerHTML = '<span style="color: blue;">⏳ Đang upload...</span>';
+                
+                const response = await fetch('/api/trademark/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div style="color: green;">
+                            ✅ ${result.message}<br>
+                            📊 Excel: ${result.total_excel} IDs, Thêm mới: ${result.new_added}, Tổng: ${result.total_after}
+                        </div>
+                    `;
+                    fileInput.value = ''; // Clear file input
+                    refreshTrademarkList(); // Refresh list
+                } else {
+                    resultDiv.innerHTML = `<span style="color: red;">❌ ${result.message}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span style="color: red;">❌ Lỗi: ${error.message}</span>`;
+            }
+        }
+
+        // Delete trademark ID
+        async function deleteTrademarkId(id) {
+            if (!confirm(`Bạn có chắc muốn xóa ID: ${id}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/trademark/delete', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show success message briefly
+                    const tempMsg = document.createElement('div');
+                    tempMsg.innerHTML = `<span style="color: green; font-weight: bold;">✅ Đã xóa ID: ${id}</span>`;
+                    tempMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10003; border-left: 4px solid #28a745;';
+                    document.body.appendChild(tempMsg);
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(tempMsg);
+                    }, 3000);
+                    
+                    // Update local data and maintain search state
+                    allTrademarkIds = allTrademarkIds.filter(existingId => existingId !== id);
+                    document.getElementById('ids-count').textContent = allTrademarkIds.length;
+                    
+                    // Re-apply current search filter
+                    const currentSearch = document.getElementById('trademark-search').value.trim();
+                    if (currentSearch) {
+                        filterTrademarkList();
+                    } else {
+                        displayTrademarkIds(allTrademarkIds);
+                    }
+                } else {
+                    alert(`Lỗi khi xóa: ${result.message}`);
+                }
+            } catch (error) {
+                alert(`Lỗi: ${error.message}`);
+            }
+        }
+
+        // Global variable to store all trademark IDs
+        let allTrademarkIds = [];
+
+        // Refresh trademark list
+        async function refreshTrademarkList() {
+            const listDiv = document.getElementById('trademark-list');
+            const countSpan = document.getElementById('ids-count');
+            
+            try {
+                listDiv.innerHTML = '<span style="color: blue;">⏳ Đang tải...</span>';
+                
+                const response = await fetch('/api/trademark');
+                const result = await response.json();
+                
+                if (result.success) {
+                    allTrademarkIds = result.data; // Store full data
+                    countSpan.textContent = allTrademarkIds.length;
+                    
+                    // Clear search when refreshing
+                    document.getElementById('trademark-search').value = '';
+                    clearTrademarkSearch();
+                    
+                    displayTrademarkIds(allTrademarkIds);
+                } else {
+                    listDiv.innerHTML = '<span style="color: red;">❌ Lỗi khi tải danh sách</span>';
+                }
+            } catch (error) {
+                listDiv.innerHTML = `<span style="color: red;">❌ Lỗi: ${error.message}</span>`;
+            }
+        }
+
+        // Display trademark IDs
+        function displayTrademarkIds(ids, searchTerm = '') {
+            const listDiv = document.getElementById('trademark-list');
+            
+            if (ids.length === 0) {
+                if (searchTerm) {
+                    listDiv.innerHTML = '<span style="color: #666;">Không tìm thấy ID nào phù hợp</span>';
+                } else {
+                    listDiv.innerHTML = '<span style="color: #666;">Chưa có IDs nào</span>';
+                }
+                return;
+            }
+
+            const maxDisplay = 100; // Tăng limit khi search
+            const displayIds = ids.slice(0, maxDisplay);
+            
+            let html = '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">';
+            
+            displayIds.forEach(id => {
+                // Highlight search term
+                let displayId = id;
+                if (searchTerm) {
+                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                    displayId = id.replace(regex, '<mark style="background: #ffeb3b; padding: 0 2px;">$1</mark>');
+                }
+                
+                html += `
+                    <div style="display: flex; align-items: center; background: #e9ecef; padding: 4px 8px; border-radius: 6px; font-size: 12px; border: 1px solid #dee2e6;">
+                        <span style="margin-right: 6px; color: #495057;">${displayId}</span>
+                        <button onclick="deleteTrademarkId('${id}')" 
+                                style="background: #dc3545; color: white; border: none; border-radius: 3px; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;"
+                                onmouseover="this.style.background='#c82333'"
+                                onmouseout="this.style.background='#dc3545'"
+                                title="Xóa ID: ${id}">✕</button>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            if (ids.length > maxDisplay) {
+                html += `<div style="color: #666; font-style: italic; text-align: center; padding: 10px; border-top: 1px solid #dee2e6;">... và ${ids.length - maxDisplay} IDs khác</div>`;
+            }
+            
+            listDiv.innerHTML = html;
+        }
+
+        // Filter trademark list based on search term
+        function filterTrademarkList() {
+            const searchTerm = document.getElementById('trademark-search').value.trim();
+            const searchInfoDiv = document.getElementById('search-info');
+            const clearBtn = document.getElementById('clear-search-btn');
+            
+            if (searchTerm === '') {
+                // Show all IDs
+                displayTrademarkIds(allTrademarkIds);
+                searchInfoDiv.style.display = 'none';
+                clearBtn.style.display = 'none';
+            } else {
+                // Filter IDs
+                const filteredIds = allTrademarkIds.filter(id => 
+                    id.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                
+                displayTrademarkIds(filteredIds, searchTerm);
+                
+                // Show search info
+                searchInfoDiv.innerHTML = `🔍 Tìm thấy <strong>${filteredIds.length}</strong> ID chứa "${searchTerm}"`;
+                searchInfoDiv.style.display = 'block';
+                clearBtn.style.display = 'inline-block';
+            }
+        }
+
+        // Clear search
+        function clearTrademarkSearch() {
+            document.getElementById('trademark-search').value = '';
+            document.getElementById('search-info').style.display = 'none';
+            document.getElementById('clear-search-btn').style.display = 'none';
+            displayTrademarkIds(allTrademarkIds);
+        }
+
+        // Handle Enter key for single ID input
+        document.addEventListener('DOMContentLoaded', function() {
+            const singleIdInput = document.getElementById('single-id-input');
+            if (singleIdInput) {
+                singleIdInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        addSingleId();
+                    }
+                });
+            }
+
+        
+            const searchInput = document.getElementById('trademark-search');
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        clearTrademarkSearch();
+                        this.blur(); // Remove focus
+                    }
+                  
+                });
+            }
+
+            // Handle trademark close button hover
+            const closeBtn = document.getElementById('trademark-close-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('mouseenter', function() {
+                    this.style.background = '#c82333 !important';
+                    this.style.transform = 'scale(1.1)';
+                });
+                closeBtn.addEventListener('mouseleave', function() {
+                    this.style.background = '#dc3545 !important';
+                    this.style.transform = 'scale(1)';
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
