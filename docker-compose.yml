@@ -26,6 +26,11 @@ services:
     restart: unless-stopped
     networks:
       - wm-mega-network
+    # DNS configuration for external connectivity
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     # Resource limits
     deploy:
       resources:
@@ -87,9 +92,16 @@ services:
 networks:
   wm-mega-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+    # Removed custom subnet to allow external connectivity
+    # ipam:
+    #   config:
+    #     - subnet: 172.20.0.0/16
+    # Enable external connectivity
+    external: false
+    # Use host network for better connectivity (optional)
+    # driver_opts:
+    #   com.docker.network.bridge.enable_icc: "true"
+    #   com.docker.network.bridge.enable_ip_masquerade: "true"
 
 volumes:
   mongodb_data:
