@@ -1,15 +1,56 @@
-test.py
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Logs
+*.log
 flask.log
 mlx.log
-.idea/
-__pycache__/config.cpython-310.pyc
-__pycache__/multix.cpython-310.pyc
-__pycache__/trademark_trie.cpython-310.pyc
-__pycache__/walmart.cpython-310.pyc
+multiloginx.log
 error.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
 .env
-*.pyc
+.env.local
+.env.production
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application specific
+uploads/
+logs/
+backups/
+temp/
+*.tmp
 
 # Google Drive API credentials (SECURITY)
 credentials.json
 token.json
+
+# Test files
+test.py
+test_*.py
+
+# Build artifacts
+build/
+dist/
+*.egg-info/

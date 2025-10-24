@@ -1,16 +1,95 @@
 version: '3.8'
 
 services:
-  web:
-    build: .
-    container_name: flask_app
+  wm-mega:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wm-mega-app
+    hostname: wm-mega
     ports:
       - "5000:5000"
     volumes:
-      - .:/app
+      # Application data
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./multilogin:/app/multilogin
+      # Optional: Mount source code for development
+      # - .:/app
     environment:
       - FLASK_APP=app.py
+      - FLASK_ENV=production
+      - DISPLAY=:99
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - wm-mega-network
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MongoDB service with authentication
+  mongodb:
+    image: mongo:6.0
+    container_name: wm-mega-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/entrypoint-initdb.d
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=wm_mega_2024
+      - MONGO_INITDB_DATABASE=walmart
+    networks:
+      - wm-mega-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Redis for caching (uncomment if needed)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: wm-mega-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - wm-mega-network
+  #   restart: unless-stopped
+  #   command: redis-server --appendonly yes
 
 networks:
-  default:
+  wm-mega-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  mongodb_data:

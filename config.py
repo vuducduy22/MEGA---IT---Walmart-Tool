@@ -15,6 +15,15 @@ PASSWORD = os.getenv("MLX_PASSWORD")
 FOLDER_ID = os.getenv("FOLDER_ID")
 WORKSPACE_ID = os.getenv("WORKSPACE_ID")
 
-client = MongoClient(os.getenv("MONGO_URI"))
+# AWS S3 Configuration
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
+AWS_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME", "mega.iart.group")
+AWS_FOLDER_NAME = os.getenv("AWS_FOLDER_NAME", "images")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
+
+# MongoDB connection with authentication
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://wm_mega_user:wm_mega@wm-mega-mongodb:27017/walmart")
+client = MongoClient(MONGO_URI)
 db = client["walmart"]
 collection_log = db["logs"]

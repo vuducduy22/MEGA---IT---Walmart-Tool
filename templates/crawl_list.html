@@ -215,8 +215,8 @@
             </div>
             <div class="filter-group">
                 <label>&nbsp;</label>
-                <button class="btn" onclick="downloadImagesToGoogleDrive()" style="background: #4285f4; color: white;">
-                    📱 Download to Google Drive
+                <button class="btn" onclick="downloadImagesToS3()" style="background: #ff9900; color: white;">
+                    ☁️ Download to AWS S3
                 </button>
             </div>
         </div>
@@ -452,8 +452,8 @@
             loadProducts(1);
         }
 
-        // Download images to Google Drive
-        async function downloadImagesToGoogleDrive() {
+        // Download images to AWS S3
+        async function downloadImagesToS3() {
             const collectionFilter = document.getElementById('collectionFilter').value;
             
             if (!collectionFilter) {
@@ -462,7 +462,7 @@
             }
 
             // Show confirmation dialog
-            const folderName = prompt('Tên folder trên Google Drive (để trống sẽ auto-generate):', 
+            const folderName = prompt('Tên folder trên AWS S3 (để trống sẽ auto-generate):', 
                                     `Product_Images_${new Date().toISOString().slice(0,10)}`);
             
             if (folderName === null) {
@@ -481,7 +481,7 @@
             button.disabled = true;
 
             try {
-                const response = await fetch('/api/download-images-to-drive', {
+                const response = await fetch('/api/download-images-to-s3', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -518,7 +518,7 @@ Upload thất bại: ${result.failed_uploads}`;
                         }
                     }
 
-                    message += `\n\nKiểm tra Google Drive của bạn!`;
+                    message += `\n\nKiểm tra AWS S3 bucket của bạn!`;
                     alert(message);
                 } else {
                     // Error message

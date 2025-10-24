@@ -59,3 +59,27 @@ crawler-walmart/
 
 
 © 2025 2sd-inventory Automation by [@chicanancom](https://github.com/chicanancom). Tất cả các quyền được bảo lưu.
+
+# 1. Setup permissions
+chmod +x docker-run.sh
+
+# 2. Start application
+./docker-run.sh start
+
+# 3. Check status
+./docker-run.sh status
+
+# 4. View logs
+./docker-run.sh logs
+
+# 5. Stop application
+./docker-run.sh stop
+
+# 6. Update application
+./docker-run.sh update
+
+# 7. Create backup
+./docker-run.sh backup
+
+# 8. Cleanup resources
+./docker-run.sh cleanup

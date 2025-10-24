@@ -1029,7 +1029,7 @@
                         sku_column: skuColumn.trim().toUpperCase(),
                         batch_column: batchColumn.trim().toUpperCase(),
                         image_column: fillImagesFromDrive ? imageColumn.trim().toUpperCase() : 'T',
-                        fill_images_from_drive: fillImagesFromDrive,
+                        fill_images_from_s3: fillImagesFromDrive,
                         start_row: parseInt(startRow),
                         fill_mode: fillMode
                     })
@@ -1043,13 +1043,13 @@
                         statusMessage = `
                             Hoàn thành chế độ Duplicate!<br>
                             ${result.message}<br>
-                            File mới: ${result.new_filename}
+                            File mới: ${result.new_filename}${result.image_column ? `<br>📷 Cột ${result.image_column}: ${result.images_filled} ảnh từ AWS S3 (fill tuần tự)` : ''}
                         `;
                     } else {
                         statusMessage = `
                             Hoàn thành chế độ Repeat!<br>
                             Đã phát hiện ${result.total_rows_detected} dòng ban đầu<br>
-                            Fill ${result.filled_count} dòng vào cột ${result.column} (Product Name), ${result.sku_column} (SKU) và ${result.batch_column} (Batch ID)<br>
+                            Fill ${result.filled_count} dòng vào cột ${result.column} (Product Name), ${result.sku_column} (SKU) và ${result.batch_column} (Batch ID)${result.image_column ? `, ${result.image_column} (Images từ ${result.images_filled} ảnh AWS S3 - fill tuần tự)` : ''}<br>
                             Batch ID: <strong>${result.batch_id}</strong> | Phạm vi: dòng ${result.start_row}-${result.end_row}
                         `;
                     }
@@ -1148,10 +1148,10 @@
                         <div style="margin-top: 15px;">
                             <label style="display: flex; align-items: center; cursor: pointer; user-select: none;">
                                 <input type="checkbox" id="fillImagesFromDrive" style="margin-right: 8px;">
-                                <span style="color: #666; font-size: 14px;">📷 Fill ảnh từ Google Drive theo tên sản phẩm</span>
+                                <span style="color: #666; font-size: 14px;">📷 Fill ảnh từ AWS S3 (tuần tự)</span>
                             </label>
                             <small style="color: #999; font-size: 11px; margin-left: 24px; display: block; margin-top: 5px;">
-                                Tự động tìm folder trên Google Drive có tên giống product name và fill ảnh vào cột Images
+                                Lấy tất cả ảnh từ AWS S3 và fill tuần tự vào cột Images (lặp lại nếu cần)
                             </small>
                         </div>
                         <small style="color: #999; font-size: 12px; margin-top: 8px; display: block;">

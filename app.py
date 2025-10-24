@@ -1218,7 +1218,7 @@ def fill_excel_data():
         sku_column = data.get('sku_column', 'A')
         batch_column = data.get('batch_column', 'CU')
         image_column = data.get('image_column', 'T')
-        fill_images_from_drive = data.get('fill_images_from_drive', False)
+        fill_images_from_s3 = data.get('fill_images_from_s3', False)  # Changed from fill_images_from_drive
         start_row = data.get('start_row', 7)
         fill_mode = data.get('fill_mode', 'repeat')  # 'repeat' or 'duplicate'
         
@@ -1235,13 +1235,13 @@ def fill_excel_data():
         print(f"Đã lấy {len(products)} sản phẩm từ collection '{collection}'")
         print(f"Fill mode: {fill_mode}")
         print(f"Product name column: {column}, SKU column: {sku_column}, Batch ID column: {batch_column}")
-        if fill_images_from_drive:
-            print(f"Image column: {image_column} (fill from Google Drive: ON)")
+        if fill_images_from_s3:
+            print(f"Image column: {image_column} (fill from AWS S3: ON)")
         print(f"Sẽ tự động fill từ dòng {start_row} đến cuối file")
         
         # Read Excel file and fill data
         from import_excel import fill_excel_with_data
-        result = fill_excel_with_data(filename, products, column, start_row, fill_mode, sku_column, batch_column, image_column, fill_images_from_drive)
+        result = fill_excel_with_data(filename, products, column, start_row, fill_mode, sku_column, batch_column, image_column, fill_images_from_s3)
         
         return jsonify(result)
         
@@ -1314,10 +1314,10 @@ def get_collections_api():
             'collections': []
         }), 500
 
-# Route: Download images to Google Drive
-@app.route('/api/download-images-to-drive', methods=['POST'])
-def download_images_to_drive():
-    """API endpoint để download hình ảnh từ database lên Google Drive"""
+# Route: Download images to AWS S3
+@app.route('/api/download-images-to-s3', methods=['POST'])
+def download_images_to_s3():
+    """API endpoint để download hình ảnh từ database lên AWS S3"""
     try:
         data = request.get_json()
         collection_name = data.get('collection')
@@ -1327,13 +1327,13 @@ def download_images_to_drive():
         if not collection_name:
             return jsonify({'success': False, 'error': 'Thiếu thông tin collection'}), 400
         
-        # Import Google Drive handler
+        # Import AWS S3 handler
         try:
-            from google_drive_handler import GoogleDriveUploader
+            from aws_s3_handler import AWSS3Uploader
         except ImportError as e:
             return jsonify({
                 'success': False, 
-                'error': 'Google Drive API chưa được setup. Vui lòng cài đặt dependencies và credentials.'
+                'error': 'AWS S3 handler chưa được setup. Vui lòng cài đặt dependencies và credentials.'
             }), 500
         
         # Get products from database
@@ -1379,19 +1379,19 @@ def download_images_to_drive():
         if not products_with_images:
             return jsonify({'success': False, 'error': 'Không tìm thấy sản phẩm nào có hình ảnh'}), 400
         
-        # Initialize Google Drive uploader
+        # Initialize AWS S3 uploader
         try:
-            uploader = GoogleDriveUploader()
+            uploader = AWSS3Uploader()
         except FileNotFoundError:
             return jsonify({
                 'success': False,
-                'error': 'Credentials file không tìm thấy. Vui lòng setup Google Drive API credentials.',
-                'setup_guide': 'Chạy python google_drive_handler.py để xem hướng dẫn setup'
+                'error': 'AWS credentials không tìm thấy. Vui lòng setup AWS credentials.',
+                'setup_guide': 'Cài đặt AWS credentials trong environment variables'
             }), 500
         except Exception as e:
             return jsonify({
                 'success': False,
-                'error': f'Lỗi khi kết nối Google Drive: {str(e)}'
+                'error': f'Lỗi khi kết nối AWS S3: {str(e)}'
             }), 500
         
         # Batch upload images
@@ -1413,7 +1413,7 @@ def download_images_to_drive():
         return jsonify(response_data)
         
     except Exception as e:
-        print(f"Error in download_images_to_drive: {str(e)}")
+        print(f"Error in download_images_to_s3: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':

@@ -1,24 +1,84 @@
-# Sử dụng một image Python chính thức làm base image
-FROM python:3.10-slim
+# Multi-stage optimized Dockerfile for WM-MEGA
+FROM ubuntu:22.04 as base
 
-# Thiết lập thư mục làm việc trong container
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV DISPLAY=:99
+
+# Install system dependencies in one layer
+RUN apt-get update && apt-get install -y \
+    # Python and pip
+    python3.10 \
+    python3.10-dev \
+    python3-pip \
+    python3.10-venv \
+    # System tools
+    curl \
+    wget \
+    git \
+    lsof \
+    sudo \
+    # X11 and display dependencies
+    xvfb \
+    x11-utils \
+    x11-xserver-utils \
+    # Chrome/Chromium dependencies
+    libxss1 \
+    libgconf-2-4 \
+    libxrandr2 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libatk1.0-0 \
+    libcairo-gobject2 \
+    libgtk-3-0 \
+    libgdk-pixbuf2.0-0 \
+    libnss3 \
+    libxss1 \
+    libappindicator1 \
+    libindicator7 \
+    # Package extraction
+    dpkg \
+    # Network tools
+    net-tools \
+    iputils-ping \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user
+RUN useradd -m -s /bin/bash -u 1000 appuser && \
+    echo "appuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    mkdir -p /app && \
+    chown -R appuser:appuser /app
+
+# Set working directory
 WORKDIR /app
 
-# Sao chép requirements.txt và cài đặt các phụ thuộc
-COPY requirements /app/requirements
+# Switch to non-root user
+USER appuser
 
-# Cài đặt các thư viện từ requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements
+# Copy requirements first for better caching
+COPY --chown=appuser:appuser requirements.txt /app/
 
-# Sao chép mã nguồn vào container
-COPY . /app
+# Install Python dependencies
+RUN pip3 install --no-cache-dir --user -r requirements.txt
 
-# Cấu hình cho Flask
-ENV FLASK_APP=app.py
-ENV FLASK_ENV=development
+# Copy application code
+COPY --chown=appuser:appuser . /app/
 
-# Mở cổng 5000 cho Flask
+# Create necessary directories
+RUN mkdir -p /app/uploads /app/logs /app/multilogin/extracted
+
+# Set permissions
+RUN chmod +x /app/entrypoint.sh 2>/dev/null || true
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:5000/ || exit 1
+
+# Expose port
 EXPOSE 5000
 
-# Lệnh chạy Flask
-CMD ["flask", "run", "--host=0.0.0.0"]
+# Use custom entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]

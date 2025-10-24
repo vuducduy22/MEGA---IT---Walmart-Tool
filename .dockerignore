@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Logs
+*.log
+flask.log
+mlx.log
+multiloginx.log
+error.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application specific
+uploads/
+logs/
+backups/
+temp/
+*.tmp
+
+# Google Drive API credentials (SECURITY)
+credentials.json
+token.json
+
+# Test files
+test.py
+test_*.py
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+*.md
+!README.md
+
+# Virtual environment
+env/
+venv/
