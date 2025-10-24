@@ -23,7 +23,7 @@ AWS_FOLDER_NAME = os.getenv("AWS_FOLDER_NAME", "images")
 AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
 
 # MongoDB connection with authentication
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://wm_mega_user:wm_mega@wm-mega-mongodb:27017/walmart")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://wm-mega-mongodb:27017/walmart")
 client = MongoClient(MONGO_URI)
 db = client["walmart"]
 collection_log = db["logs"]

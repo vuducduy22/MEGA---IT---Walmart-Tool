@@ -57,11 +57,11 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
-      - ./mongo-init:/entrypoint-initdb.d
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=wm_mega_2024
-      - MONGO_INITDB_DATABASE=walmart
+    #   - ./mongo-init:/entrypoint-initdb.d
+    # environment:
+    #   - MONGO_INITDB_ROOT_USERNAME=admin
+    #   - MONGO_INITDB_ROOT_PASSWORD=wm_mega_2024
+    #   - MONGO_INITDB_DATABASE=walmart
     networks:
       - wm-mega-network
     restart: unless-stopped
