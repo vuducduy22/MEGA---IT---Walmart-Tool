@@ -77,8 +77,8 @@ class MultiloginService:
             # Cấu hình SSL verification
             self.session.verify = False  # Tạm thời disable SSL verification
             
-            # Set timeout cao hơn
-            self.session.timeout = 60  # Tăng timeout lên 60 giây
+            # Set timeout ngắn hơn để tránh hang
+            self.session.timeout = 10  # Giảm timeout xuống 10 giây
             
             # Thêm User-Agent để tránh bị block
             self.session.headers.update({
@@ -671,8 +671,8 @@ def create_ssl_session():
     # Cấu hình SSL verification
     session.verify = False  # Tạm thời disable SSL verification
     
-    # Set timeout cao hơn
-    session.timeout = 60  # Tăng timeout lên 60 giây
+    # Set timeout ngắn hơn để tránh hang
+    session.timeout = 10  # Giảm timeout xuống 10 giây
     
     # Set headers
     session.headers.update(HEADERS)
@@ -726,22 +726,17 @@ def start_quick_profile(proxy: str = None):
     
     if proxy is not None:
         proxy_parts = proxy.split(":")
-        if len(proxy_parts) == 2:
-            # Format: host:port
+        if len(proxy_parts) >= 2:
+            # Format: host:port hoặc host:port:username:password hoặc host:port:username:password:extras
             payload["proxy"] = {
                 "host": proxy_parts[0],
                 "type": "http",
                 "port": int(proxy_parts[1])
             }
-        elif len(proxy_parts) == 4:
-            # Format: host:port:username:password
-            payload["proxy"] = {
-                "host": proxy_parts[0],
-                "type": "http",
-                "port": int(proxy_parts[1]),
-                "username": proxy_parts[2],
-                "password": proxy_parts[3]
-            }
+            # Thêm username/password nếu có
+            if len(proxy_parts) >= 4:
+                payload["proxy"]["username"] = proxy_parts[2]
+                payload["proxy"]["password"] = proxy_parts[3]
         else:
             raise ValueError(f"Invalid proxy format: {proxy}. Expected format: 'host:port' or 'host:port:username:password'")
     
