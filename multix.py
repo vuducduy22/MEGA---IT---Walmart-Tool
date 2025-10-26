@@ -675,7 +675,9 @@ def start_quick_profile(proxy: str = None):
         "automation": "selenium",
         "is_headless": True,
         "parameters": {
-            "fingerprint": {},
+            "fingerprint": {
+                "browser_version": "120.0.6099.109"
+            },
             "flags": {
                 "navigator_masking": "mask",
                 "audio_masking": "mask",
