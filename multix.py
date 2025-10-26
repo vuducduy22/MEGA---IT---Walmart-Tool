@@ -6,11 +6,56 @@ import hashlib
 import json
 import logging
 import pyotp
+import re
 from datetime import datetime, timedelta
 from selenium.webdriver.chromium.options import ChromiumOptions
 import urllib3
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+def fetch_capmonster_fingerprint():
+    """
+    Ask CapMonster for the latest valid User-Agent.
+    According to CapMonster docs, POSTing to
+    https://capmonster.cloud/api/useragent/actual
+    returns the current Windows UA that you should use.
+    """
+    try:
+        resp = requests.post(
+            "https://capmonster.cloud/api/useragent/actual",
+            headers={"Content-Type": "application/json"},
+            json={},
+            timeout=10
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        
+        # Most implementations return something like:
+        # { "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ... Chrome/140.0.0.0 Safari/537.36" }
+        ua = data.get("userAgent") or data.get("user_agent")
+        if not ua:
+            raise RuntimeError(f"CapMonster UA API returned no UA: {data}")
+        
+        # Extract Chrome version from UA, e.g. Chrome/140.0.0.0
+        m = re.search(r"Chrome/([0-9.]+)", ua)
+        chrome_version = m.group(1) if m else None
+        
+        # CapMonster specifically recommends using a Windows UA
+        os_type = "windows"
+        
+        return {
+            "user_agent": ua,
+            "browser_version": chrome_version,
+            "os_type": os_type,
+        }
+    except Exception as e:
+        print(f"Warning: Could not fetch CapMonster fingerprint: {e}")
+        # Fallback to default values
+        return {
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+            "browser_version": "119.0.0.0",
+            "os_type": "windows",
+        }
 
 
 class MultiloginService:
@@ -668,16 +713,20 @@ def create_ssl_session():
     return session
 
 def start_quick_profile(proxy: str = None):
+    # Get dynamic fingerprint from CapMonster
+    fp = fetch_capmonster_fingerprint()
+    
     payload = {
         "browser_type": "mimic",
         "name": "Capmonster",
-        "os_type": "linux",
+        "os_type": fp["os_type"],  # Use dynamic os_type
         "automation": "selenium",
         "is_headless": True,
         "parameters": {
             "fingerprint": {
-                "browser_version": "119.0.6045.105",
-                "browser_type": "mimic"
+                "browser_type": "mimic",
+                "browser_version": fp["browser_version"],  # Use dynamic browser_version
+                "user_agent": fp["user_agent"]  # Add user_agent
             },
             "flags": {
                 "navigator_masking": "mask",
@@ -759,6 +808,31 @@ def start_quick_profile(proxy: str = None):
                 ]
             }
     print(response.json())
+    
+    # Handle BROWSER_VERSION_NOT_FOUND with retry
+    if response.json()["status"]["http_code"] == 400:
+        status_info = response.json().get("status", {})
+        error_code = status_info.get("error_code")
+        
+        if error_code == "BROWSER_VERSION_NOT_FOUND":
+            print("Got BROWSER_VERSION_NOT_FOUND, retrying without browser_version...")
+            
+            # Remove browser_version and retry
+            try:
+                del payload["parameters"]["fingerprint"]["browser_version"]
+            except KeyError:
+                pass  # already gone
+            
+            # Retry request
+            try:
+                ssl_session = create_ssl_session()
+                response = ssl_session.post(f"{MLX_LAUNCHER_V2}/profile/quick", json=payload)
+            except Exception as e:
+                print(f"SSL Error in retry: {e}")
+                response = requests.post(f"{MLX_LAUNCHER_V2}/profile/quick", json=payload, headers=HEADERS, verify=False)
+            
+            print("Retry response:", response.json())
+    
     if response.json()["status"]["http_code"] == 200:
         selenium_port = response.json()["data"]["port"]
         option = ChromiumOptions()
