@@ -106,9 +106,9 @@ if [ -f "/app/multilogin/mlx" ]; then
     
     # Start MLX Agent with correct flags
     log "Starting MLX Agent..."
-    # Fix permissions for logs directory
+    # Fix ownership for logs directory
     mkdir -p /app/logs
-    chmod 755 /app/logs
+    sudo chown -R appuser:appuser /app/logs
     nohup /app/multilogin/mlx > /app/logs/mlx.log 2>&1 &
     MLX_PID=$!
     sleep 3

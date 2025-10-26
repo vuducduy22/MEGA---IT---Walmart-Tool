@@ -72,7 +72,8 @@ RUN pip3 install --no-cache-dir --user -r requirements.txt
 COPY --chown=appuser:appuser . /app/
 
 # Create necessary directories
-RUN mkdir -p /app/uploads /app/logs /app/multilogin/extracted
+RUN mkdir -p /app/uploads /app/logs /app/multilogin/extracted && \
+    chown -R appuser:appuser /app/uploads /app/logs /app/multilogin/extracted
 
 # Set permissions
 RUN chmod +x /app/entrypoint.sh 2>/dev/null || true
