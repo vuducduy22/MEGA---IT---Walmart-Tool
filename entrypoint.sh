@@ -103,7 +103,7 @@ if [ -f "/app/multilogin/mlx" ]; then
     
     # Install missing dependencies (skip if already installed)
     log "Checking MLX Agent dependencies..."
-    if ! dpkg -l | grep -q libayatana-appindicator3-1; then
+    if ! dpkg -l | grep -q "libayatana-appindicator3-1"; then
         log "Installing MLX Agent dependencies..."
         sudo apt update -qq
         
