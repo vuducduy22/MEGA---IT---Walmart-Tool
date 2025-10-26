@@ -770,6 +770,12 @@ def start_quick_profile(proxy: str = None):
                 break
             else:
                 print(f"Response status {response.status_code} từ {url}")
+                try:
+                    error_detail = response.json()
+                    print(f"Chi tiết lỗi: {error_detail}")
+                except:
+                    print(f"Response text: {response.text}")
+                
                 if i < len(urls_to_try) - 1:
                     continue
                     

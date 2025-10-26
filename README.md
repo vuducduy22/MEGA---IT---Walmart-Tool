@@ -86,3 +86,6 @@ sudo docker-compose up -d --build
 docker network inspect mega---it---walmart-tool_wm-mega-network
 
 docker-compose restart wm-mega
+
+# Lệnh nhanh
+docker-compose down && docker-compose build --no-cache wm-mega && docker-compose up -d
