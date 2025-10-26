@@ -1,0 +1,31 @@
+docker exec wm-mega-app find /app/multilogin/extracted -name "*.bin" -o -name "agent*"
+
+File agent.bin đã tồn tại tại /app/multilogin/extracted/opt/mlx/agent.bin!
+
+
+🔧 Giải pháp:
+Bước 1: Tạo directory /opt/mlx
+docker exec wm-mega-app sudo mkdir -p /opt/mlx
+
+Bước 2: Copy agent.bin vào đúng chỗ
+docker exec wm-mega-app sudo cp /app/multilogin/extracted/opt/mlx/agent.bin /opt/mlx/agent.bin
+
+Bước 3: Set permissions
+docker exec wm-mega-app sudo chmod +x /opt/mlx/agent.bin
+
+Bước 4: Test MLX Agent
+docker exec wm-mega-app /app/multilogin/mlx --help
+docker exec wm-mega-app /app/multilogin/mlx --version
+
+Bước 5: Start MLX Agent
+docker exec wm-mega-app /app/multilogin/mlx &
+
+Bước 1: Cài đặt missing library
+docker exec wm-mega-app sudo apt update
+docker exec wm-mega-app sudo apt install -y libayatana-appindicator3-1
+
+Bước 2: Kiểm tra các dependencies khác
+docker exec wm-mega-app ldd /opt/mlx/agent.bin
+
+Bước 3: Cài đặt tất cả missing dependencies
+docker exec wm-mega-app sudo apt install -y libayatana-appindicator3-1 libappindicator3-1 libindicator3-7

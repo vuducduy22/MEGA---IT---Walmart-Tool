@@ -87,14 +87,43 @@ else
     log_warning "MultiloginX .deb file not found, skipping..."
 fi
 
-# 3. Start MLX Agent if available
-if command -v mlx-agent &> /dev/null; then
-    log "Starting MLX Agent..."
-    nohup sudo mlx-agent > /app/logs/mlx.log 2>&1 &
-    MLX_PID=$!
-    log_success "MLX Agent started with PID: $MLX_PID"
+# 3. Setup and Start MLX Agent
+if [ -f "/app/multilogin/mlx" ]; then
+    log "Setting up MLX Agent..."
+    
+    # Create /opt/mlx directory if not exists
+    sudo mkdir -p /opt/mlx
+    
+    # Copy agent.bin to correct location if not exists
+    if [ ! -f "/opt/mlx/agent.bin" ] && [ -f "/app/multilogin/extracted/opt/mlx/agent.bin" ]; then
+        sudo cp /app/multilogin/extracted/opt/mlx/agent.bin /opt/mlx/agent.bin
+        sudo chmod +x /opt/mlx/agent.bin
+        log "Copied agent.bin to /opt/mlx/"
+    fi
+    
+    # Install missing dependencies
+    log "Installing MLX Agent dependencies..."
+    sudo apt update -qq
+    sudo apt install -y libayatana-appindicator3-1 libappindicator3-1 libindicator3-7
+    
+    # Test MLX Agent
+    if /app/multilogin/mlx --version >/dev/null 2>&1; then
+        log "Starting MLX Agent..."
+        nohup /app/multilogin/mlx > /app/logs/mlx.log 2>&1 &
+        MLX_PID=$!
+        sleep 2
+        
+        # Check if MLX Agent is running
+        if ps -p $MLX_PID > /dev/null 2>&1; then
+            log_success "MLX Agent started with PID: $MLX_PID"
+        else
+            log_warning "MLX Agent failed to start, check logs"
+        fi
+    else
+        log_error "MLX Agent test failed, check dependencies"
+    fi
 else
-    log_warning "MLX Agent not found, skipping..."
+    log_warning "MLX executable not found, skipping..."
 fi
 
 # 4. Clean Python cache
