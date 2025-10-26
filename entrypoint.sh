@@ -104,21 +104,17 @@ if [ -f "/app/multilogin/mlx" ]; then
     # Skip dependencies installation (already installed in Dockerfile)
     log "Skipping MLX Agent dependencies installation..."
     
-    # Test MLX Agent
-    if /app/multilogin/mlx -headless >/dev/null 2>&1; then
-        log "Starting MLX Agent..."
-        nohup /app/multilogin/mlx -port 45001 -headless > /app/logs/mlx.log 2>&1 &
-        MLX_PID=$!
-        sleep 2
-        
-        # Check if MLX Agent is running
-        if ps -p $MLX_PID > /dev/null 2>&1; then
-            log_success "MLX Agent started with PID: $MLX_PID"
-        else
-            log_warning "MLX Agent failed to start, check logs"
-        fi
+    # Skip MLX Agent test and start directly
+    log "Starting MLX Agent directly..."
+    nohup /app/multilogin/mlx -port 45001 -headless > /app/logs/mlx.log 2>&1 &
+    MLX_PID=$!
+    sleep 2
+    
+    # Check if MLX Agent is running
+    if ps -p $MLX_PID > /dev/null 2>&1; then
+        log_success "MLX Agent started with PID: $MLX_PID"
     else
-        log_error "MLX Agent test failed, check dependencies"
+        log_warning "MLX Agent failed to start, check logs"
     fi
 else
     log_warning "MLX executable not found, skipping..."
