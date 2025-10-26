@@ -29,3 +29,16 @@ docker exec wm-mega-app ldd /opt/mlx/agent.bin
 
 Bước 3: Cài đặt tất cả missing dependencies
 docker exec wm-mega-app sudo apt install -y libayatana-appindicator3-1 libappindicator3-1 libindicator3-7
+
+
+# Stop containers
+docker-compose down
+
+# Rebuild với entrypoint.sh đã fix
+docker-compose build --no-cache
+
+# Start containers
+docker-compose up -d
+
+# Kiểm tra logs
+docker-compose logs wm-mega | grep -i "MLX Agent"

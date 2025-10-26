@@ -116,9 +116,9 @@ if [ -f "/app/multilogin/mlx" ]; then
     fi
     
     # Test MLX Agent
-    if /app/multilogin/mlx --version >/dev/null 2>&1; then
+    if /app/multilogin/mlx -log-console >/dev/null 2>&1; then
         log "Starting MLX Agent..."
-        nohup /app/multilogin/mlx > /app/logs/mlx.log 2>&1 &
+        nohup /app/multilogin/mlx -port 45001 -headless > /app/logs/mlx.log 2>&1 &
         MLX_PID=$!
         sleep 2
         
