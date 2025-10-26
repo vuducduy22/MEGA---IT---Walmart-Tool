@@ -693,7 +693,8 @@ def start_quick_profile(proxy: str = None):
         "is_headless": True,
         "parameters": {
             "fingerprint": {
-                "browser_type": "mimic"
+                "browser_type": "mimic",
+                "browser_version": "119"
             },
             "flags": {
                 "navigator_masking": "mask",
