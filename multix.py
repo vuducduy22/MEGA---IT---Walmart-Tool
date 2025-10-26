@@ -750,9 +750,9 @@ def start_quick_profile(proxy: str = None):
     # Sử dụng SSL session để xử lý lỗi SSL với fallback strategy
     urls_to_try = [
         f"{MLX_LAUNCHER_V2}/profile/quick",  # HTTPS remote
-        f"{MLX_LAUNCHER_V2_FALLBACK}/profile/quick",  # HTTP localhost fallback
-        f"http://127.0.0.1:45001/api/v2/profile/quick",  # Direct localhost
-        f"http://localhost:45001/api/v2/profile/quick"  # Alternative localhost
+        f"{MLX_LAUNCHER_V2_FALLBACK}/profile/quick",  # HTTPS localhost fallback
+        f"https://127.0.0.1:45001/api/v2/profile/quick",  # Direct HTTPS localhost
+        f"https://localhost:45001/api/v2/profile/quick"  # Alternative HTTPS localhost
     ]
     
     last_error = None
