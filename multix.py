@@ -675,7 +675,9 @@ def start_quick_profile(proxy: str = None):
         "automation": "selenium",
         "is_headless": True,
         "parameters": {
-            "fingerprint": {},
+            "fingerprint": {
+                "browser_type": "mimic"
+            },
             "flags": {
                 "navigator_masking": "mask",
                 "audio_masking": "mask",
@@ -738,7 +740,7 @@ def start_quick_profile(proxy: str = None):
         
         # Fallback: thử với HTTP nếu HTTPS fail
         try:
-            http_url = f"https://launcher.mlx.yt:45001/api/v2/profile/quick"
+            http_url = f"http://launcher.mlx.yt:45001/api/v2/profile/quick"
             response = requests.post(http_url, headers=HEADERS, data=payload_json, verify=False, timeout=30)
         except Exception as http_error:
             print(f"HTTP Error: {http_error}")
