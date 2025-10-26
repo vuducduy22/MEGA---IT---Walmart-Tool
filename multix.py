@@ -53,19 +53,21 @@ class MultiloginService:
             # Disable SSL warnings
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             
-            # Tạo retry strategy
+            # Tạo retry strategy với exponential backoff
             retry_strategy = Retry(
-                total=3,
-                backoff_factor=1,
-                status_forcelist=[429, 500, 502, 503, 504],
-                method_whitelist=["HEAD", "GET", "OPTIONS", "POST"]
+                total=5,  # Tăng số lần retry
+                backoff_factor=2,  # Tăng thời gian chờ giữa các retry
+                status_forcelist=[429, 500, 502, 503, 504, 520, 521, 522, 523, 524],
+                method_whitelist=["HEAD", "GET", "OPTIONS", "POST", "PUT", "DELETE"],
+                raise_on_status=False  # Không raise exception khi gặp status code trong list
             )
             
             # Tạo adapter với SSL configuration
             adapter = HTTPAdapter(
                 max_retries=retry_strategy,
-                pool_connections=10,
-                pool_maxsize=20
+                pool_connections=20,  # Tăng pool connections
+                pool_maxsize=50,  # Tăng pool maxsize
+                pool_block=False  # Không block khi pool đầy
             )
             
             # Mount adapter cho HTTP và HTTPS
@@ -75,13 +77,21 @@ class MultiloginService:
             # Cấu hình SSL verification
             self.session.verify = False  # Tạm thời disable SSL verification
             
-            # Set timeout
-            self.session.timeout = 30
+            # Set timeout cao hơn
+            self.session.timeout = 60  # Tăng timeout lên 60 giây
             
-            logging.info("SSL session configured with retry strategy")
+            # Thêm User-Agent để tránh bị block
+            self.session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
+            
+            logging.info("SSL session configured with enhanced retry strategy and timeout")
             
         except Exception as e:
             logging.error(f"Error configuring SSL session: {e}")
+            # Fallback configuration
+            self.session.verify = False
+            self.session.timeout = 30
     
     def signin(self):
         """Đăng nhập vào tài khoản Multilogin"""
@@ -637,19 +647,21 @@ def create_ssl_session():
     # Disable SSL warnings
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     
-    # Tạo retry strategy
+    # Tạo retry strategy với exponential backoff
     retry_strategy = Retry(
-        total=3,
-        backoff_factor=1,
-        status_forcelist=[429, 500, 502, 503, 504],
-        method_whitelist=["HEAD", "GET", "OPTIONS", "POST"]
+        total=5,  # Tăng số lần retry
+        backoff_factor=2,  # Tăng thời gian chờ giữa các retry
+        status_forcelist=[429, 500, 502, 503, 504, 520, 521, 522, 523, 524],
+        method_whitelist=["HEAD", "GET", "OPTIONS", "POST", "PUT", "DELETE"],
+        raise_on_status=False  # Không raise exception khi gặp status code trong list
     )
     
     # Tạo adapter với SSL configuration
     adapter = HTTPAdapter(
         max_retries=retry_strategy,
-        pool_connections=10,
-        pool_maxsize=20
+        pool_connections=20,  # Tăng pool connections
+        pool_maxsize=50,  # Tăng pool maxsize
+        pool_block=False  # Không block khi pool đầy
     )
     
     # Mount adapter cho HTTP và HTTPS
@@ -659,18 +671,23 @@ def create_ssl_session():
     # Cấu hình SSL verification
     session.verify = False  # Tạm thời disable SSL verification
     
-    # Set timeout
-    session.timeout = 30
+    # Set timeout cao hơn
+    session.timeout = 60  # Tăng timeout lên 60 giây
     
     # Set headers
     session.headers.update(HEADERS)
+    
+    # Thêm User-Agent để tránh bị block
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    })
     
     return session
 
 def start_quick_profile(proxy: str = None):
     payload = {
         "browser_type": "mimic",
-        "name": "Capmonster",
+        "name": "QuickProfile",  # Thay đổi tên để tránh conflict với CapMonster
         "os_type": "linux",
         "automation": "selenium",
         "is_headless": True,
@@ -730,33 +747,56 @@ def start_quick_profile(proxy: str = None):
     
     payload_json = json.dumps(payload)
     
-    # Sử dụng SSL session để xử lý lỗi SSL
-    try:
-        ssl_session = create_ssl_session()
-        response = ssl_session.post(f"{MLX_LAUNCHER_V2}/profile/quick", data=payload_json)
-    except Exception as ssl_error:
-        print(f"SSL Error: {ssl_error}")
-        print("Thử lại với HTTP thay vì HTTPS...")
-        
-        # Fallback: thử với HTTP nếu HTTPS fail
+    # Sử dụng SSL session để xử lý lỗi SSL với fallback strategy
+    urls_to_try = [
+        f"{MLX_LAUNCHER_V2}/profile/quick",  # HTTPS remote
+        f"{MLX_LAUNCHER_V2_FALLBACK}/profile/quick",  # HTTP localhost fallback
+        f"http://127.0.0.1:45001/api/v2/profile/quick",  # Direct localhost
+        f"http://localhost:45001/api/v2/profile/quick"  # Alternative localhost
+    ]
+    
+    last_error = None
+    response = None
+    
+    for i, url in enumerate(urls_to_try):
         try:
-            http_url = f"http://launcher.mlx.yt:45001/api/v2/profile/quick"
-            response = requests.post(http_url, headers=HEADERS, data=payload_json, verify=False, timeout=30)
-        except Exception as http_error:
-            print(f"HTTP Error: {http_error}")
-            return None, {
-                "error": True,
-                "status_code": 500,
-                "error_code": "CONNECTION_FAILED",
-                "message": f"Không thể kết nối đến Multilogin Launcher: {str(ssl_error)}",
-                "detailed_message": f"SSL Error: {ssl_error}, HTTP Error: {http_error}",
-                "suggestion": [
-                    "Kiểm tra Multilogin Launcher có đang chạy không",
-                    "Kiểm tra kết nối mạng",
-                    "Thử restart Multilogin Launcher",
-                    "Kiểm tra firewall settings"
-                ]
-            }
+            print(f"Thử kết nối đến: {url}")
+            ssl_session = create_ssl_session()
+            response = ssl_session.post(url, data=payload_json)
+            
+            # Kiểm tra response status
+            if response.status_code == 200:
+                print(f"Kết nối thành công với: {url}")
+                break
+            else:
+                print(f"Response status {response.status_code} từ {url}")
+                if i < len(urls_to_try) - 1:
+                    continue
+                    
+        except Exception as e:
+            last_error = e
+            print(f"Lỗi kết nối đến {url}: {e}")
+            if i < len(urls_to_try) - 1:
+                print("Thử URL tiếp theo...")
+                continue
+    
+    # Nếu tất cả URLs đều fail
+    if response is None or response.status_code != 200:
+        return None, {
+            "error": True,
+            "status_code": 500,
+            "error_code": "CONNECTION_FAILED",
+            "message": f"Không thể kết nối đến Multilogin Launcher sau khi thử {len(urls_to_try)} URLs",
+            "detailed_message": f"Lỗi cuối cùng: {last_error}",
+            "suggestion": [
+                "Kiểm tra Multilogin Launcher có đang chạy không",
+                "Kiểm tra kết nối mạng",
+                "Thử restart Multilogin Launcher",
+                "Kiểm tra firewall settings",
+                "Kiểm tra port 45001 có bị block không",
+                "Thử chạy Multilogin Launcher trên localhost"
+            ]
+        }
     print(response.json())
     if response.json()["status"]["http_code"] == 200:
         selenium_port = response.json()["data"]["port"]
