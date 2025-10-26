@@ -84,5 +84,3 @@ sudo docker exec wm-mega-app /app/multilogin/extracted/opt/mlx/agent.bin
 sudo docker-compose up -d --build
 
 docker network inspect mega---it---walmart-tool_wm-mega-network
-
-sudo docker-compose down
