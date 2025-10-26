@@ -104,7 +104,16 @@ if [ -f "/app/multilogin/mlx" ]; then
     # Install missing dependencies
     log "Installing MLX Agent dependencies..."
     sudo apt update -qq
-    sudo apt install -y libayatana-appindicator3-1 libappindicator3-1 libindicator3-7
+    
+    # Try to install dependencies, handle conflicts
+    if sudo apt install -y libayatana-appindicator3-1 2>/dev/null; then
+        log "Installed libayatana-appindicator3-1"
+    elif sudo apt install -y libappindicator3-1 2>/dev/null; then
+        log "Installed libappindicator3-1"
+    else
+        log_warning "Could not install appindicator library, trying alternative..."
+        sudo apt install -y libindicator3-7 libgtk-3-0 libgdk-pixbuf2.0-0
+    fi
     
     # Test MLX Agent
     if /app/multilogin/mlx --version >/dev/null 2>&1; then
