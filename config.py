@@ -9,9 +9,13 @@ MLX_BASE = "https://api.multilogin.com"
 # MLX_LAUNCHER_V2 = ("https://launcher.mlx.yt:45001/api/v2")
 # MLX_LAUNCHER_V3 = "https://launcher.mlx.yt:45001/api/v3"
 
-MLX_LAUNCHER = "https://192.168.9.179:45001/api/v1"
-MLX_LAUNCHER_V2 = "https://192.168.9.179:45001/api/v2"
-MLX_LAUNCHER_V3 = "https://192.168.9.179:45001/api/v3"
+# MLX_LAUNCHER = "https://192.168.9.179:45001/api/v1"
+# MLX_LAUNCHER_V2 = "https://192.168.9.179:45001/api/v2"
+# MLX_LAUNCHER_V3 = "https://192.168.9.179:45001/api/v3"
+
+MLX_LAUNCHER = "https://localhost:45001/api/v1"
+MLX_LAUNCHER_V2 = "https://localhost:45001/api/v2"
+MLX_LAUNCHER_V3 = "https://localhost:45001/api/v3"
 
 LOCALHOST = "http://127.0.0.1"
 HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
