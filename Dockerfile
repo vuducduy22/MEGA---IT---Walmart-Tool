@@ -38,6 +38,10 @@ RUN apt-get update && apt-get install -y \
     libxss1 \
     libappindicator1 \
     libindicator7 \
+    libayatana-appindicator3-1 \
+    libayatana-ido3-0.4-0 \
+    libayatana-indicator3-7 \
+    libdbusmenu-gtk3-4 \
     # Package extraction
     dpkg \
     # Network tools
