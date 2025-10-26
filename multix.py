@@ -688,7 +688,7 @@ def start_quick_profile(proxy: str = None):
     payload = {
         "browser_type": "mimic",
         "name": "QuickProfile",  # Thay đổi tên để tránh conflict với CapMonster
-        "os_type": "linux",
+        "os_type": "android",
         "automation": "selenium",
         "is_headless": True,
         "parameters": {
@@ -702,8 +702,8 @@ def start_quick_profile(proxy: str = None):
                 "geolocation_popup": "prompt",
                 "geolocation_masking": "mask",
                 "timezone_masking": "mask",
-                "graphics_noise": "mask",
-                "graphics_masking": "mask",
+                "graphics_noise": "disabled",
+                "graphics_masking": "disabled",
                 "webrtc_masking": "mask",
                 "fonts_masking": "mask",
                 "media_devices_masking": "mask",
