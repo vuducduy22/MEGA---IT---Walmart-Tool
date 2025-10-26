@@ -717,17 +717,13 @@ def start_quick_profile(proxy: str = None):
     fp = fetch_capmonster_fingerprint()
     
     payload = {
-        "browser_type": "mimic",
+        "browser_type": "chrome",
         "name": "Capmonster",
         "os_type": fp["os_type"],  # Use dynamic os_type
         "automation": "selenium",
         "is_headless": True,
         "parameters": {
-            "fingerprint": {
-                "browser_type": "mimic",
-                "browser_version": fp["browser_version"],  # Use dynamic browser_version
-                "user_agent": fp["user_agent"]  # Add user_agent
-            },
+            "fingerprint": {},
             "flags": {
                 "navigator_masking": "mask",
                 "audio_masking": "mask",
