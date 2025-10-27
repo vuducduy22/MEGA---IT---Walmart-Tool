@@ -4,7 +4,7 @@ import os
 
 dotenv.load_dotenv()
 
-# MLX_BASE = "https://api.multilogin.com"
+MLX_BASE = "https://api.multilogin.com"
 # MLX_LAUNCHER = "https://launcher.mlx.yt:45001/api/v1"
 # MLX_LAUNCHER_V2 = ("https://launcher.mlx.yt:45001/api/v2")
 # MLX_LAUNCHER_V3 = "https://launcher.mlx.yt:45001/api/v3"
