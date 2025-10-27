@@ -712,7 +712,7 @@ def check_mlx_launcher_ready(max_wait=10):
             print(f"⏳ Đợi MLX Launcher sẵn sàng ({i+1}/{max_wait})...")
             time.sleep(1)
     
-    print(f"❌ MLX Launcher chưa sẵn sàng sau {max_wait} giây")
+    print(f"❌ MLX Launcher chưa sẵn sàng sau 10 giây")
     return False
 
 def start_quick_profile(proxy: str = None):
