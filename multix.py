@@ -794,6 +794,7 @@ def start_quick_profile(proxy: str = None):
         "os_type": payload["os_type"],
         "automation": payload["automation"],
         "is_headless": payload["is_headless"],
+        "core_version": payload["core_version"],
         "parameters": {
             "flags": payload["parameters"]["flags"],
             "storage": payload["parameters"]["storage"],
