@@ -687,7 +687,7 @@ def create_ssl_session():
 
 def check_mlx_launcher_ready(max_wait=10):
     """Kiểm tra MLX Launcher có sẵn sàng nhận request không"""
-    print(f"🔍 Kiểm tra MLX Launcher có sẵn sàng tại {MLX_LAUNCHER}...")
+    print(f"Kiểm tra MLX Launcher có sẵn sàng tại {MLX_LAUNCHER}...")
     
     for i in range(max_wait):
         try:
@@ -698,21 +698,21 @@ def check_mlx_launcher_ready(max_wait=10):
                 timeout=5,
                 verify=False  # Disable SSL verification
             )
-            print(f"📊 Response status: {response.status_code}")
+            print(f"Response status: {response.status_code}")
             if response.status_code == 200:
-                print("✅ MLX Launcher sẵn sàng!")
+                print("MLX Launcher sẵn sàng!")
                 return True
             else:
-                print(f"⚠️ Status {response.status_code}: {response.text[:100]}")
+                print(f"Status {response.status_code}: {response.text[:100]}")
         except Exception as e:
-            print(f"❌ Exception: {e}")
+            print(f"Exception: {e}")
             pass
         
         if i < max_wait - 1:
-            print(f"⏳ Đợi MLX Launcher sẵn sàng ({i+1}/{max_wait})...")
+            print(f"Đợi MLX Launcher sẵn sàng ({i+1}/{max_wait})...")
             time.sleep(1)
     
-    print(f"❌ MLX Launcher chưa sẵn sàng sau 10 giây")
+    print(f"MLX Launcher chưa sẵn sàng sau 10 giây")
     return False
 
 def start_quick_profile(proxy: str = None):
@@ -738,7 +738,7 @@ def start_quick_profile(proxy: str = None):
         "os_type": "linux",
         "automation": "selenium",
         "is_headless": True,
-        "browser_version": "mimic",
+        "core_version": 141,  
         "parameters": {
             "fingerprint": {
             },
@@ -826,11 +826,11 @@ def start_quick_profile(proxy: str = None):
     
     for payload_name, test_payload in payloads_to_try:
         payload_json = json.dumps(test_payload)
-        print(f"🧪 Thử payload: {payload_name}")
+        print(f"Thử payload: {payload_name}")
         
         for i, url in enumerate(urls_to_try):
             try:
-                print(f"🔄 [{i+1}/{len(urls_to_try)}] Thử kết nối: {url}")
+                print(f"[{i+1}/{len(urls_to_try)}] Thử kết nối: {url}")
                 # Dùng HTTPS với SSL verification disabled
                 response = requests.post(
                     url, 
@@ -840,7 +840,7 @@ def start_quick_profile(proxy: str = None):
                     verify=False  # Disable SSL verification cho self-signed cert
                 )
                 
-                print(f"📊 Response status: {response.status_code}")
+                print(f"Response status: {response.status_code}")
                 
                 # Kiểm tra response
                 if response.status_code == 200:
@@ -848,32 +848,38 @@ def start_quick_profile(proxy: str = None):
                     try:
                         result = response.json()
                         if result.get("status", {}).get("http_code") == 200:
-                            print(f"✅ Kết nối thành công với: {url} (payload: {payload_name})")
+                            print(f"Kết nối thành công với: {url} (payload: {payload_name})")
                             break
                         else:
-                            print(f"⚠️ MLX response: {result}")
+                            print(f"MLX response: {result}")
                     except:
                         pass
                     
                     # Nếu status code là 200 nhưng không parse được JSON
                     break
-                elif response.status_code == 400 and "BAD_REQUEST_VALUES" in response.text:
-                    # Nếu payload không đúng format, thử payload khác
-                    print(f"⚠️ HTTP {response.status_code}: {response.text[:200]}")
-                    print(f"⏭️ Thử payload khác...")
-                    break
+                elif response.status_code == 400:
+                    # Lỗi 400 có thể là BAD_REQUEST_VALUES hoặc BROWSER_VERSION_NOT_FOUND
+                    print(f"HTTP {response.status_code}: {response.text[:200]}")
+                    if "BAD_REQUEST_VALUES" in response.text or "browser version" in response.text:
+                        print(f"Thử payload khác...")
+                        break
+                    else:
+                        if i < len(urls_to_try) - 1:
+                            print("Thử URL tiếp theo...")
+                            time.sleep(0.5)
+                            continue
                 else:
-                    print(f"⚠️ HTTP {response.status_code}: {response.text[:200]}")
+                    print(f"HTTP {response.status_code}: {response.text[:200]}")
                     if i < len(urls_to_try) - 1:
-                        print("⏭️ Thử URL tiếp theo...")
+                        print("Thử URL tiếp theo...")
                         time.sleep(0.5)  # Delay ngắn giữa các lần thử
                         continue
                         
             except Exception as e:
                 last_error = e
-                print(f"❌ Lỗi: {e}")
+                print(f"Lỗi: {e}")
                 if i < len(urls_to_try) - 1:
-                    print("⏭️ Thử URL tiếp theo...")
+                    print("Thử URL tiếp theo...")
                     time.sleep(0.5)  # Delay ngắn giữa các lần thử
                     continue
         
