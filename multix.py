@@ -830,6 +830,7 @@ def start_quick_profile(proxy: str = None):
     for payload_name, test_payload in payloads_to_try:
         payload_json = json.dumps(test_payload)
         print(f"Thử payload: {payload_name}")
+        print(f"📝 JSON gửi đi: {payload_json[:500]}...")  # Debug payload thực tế
         
         for i, url in enumerate(urls_to_try):
             try:
