@@ -687,7 +687,7 @@ def create_ssl_session():
 
 def check_mlx_launcher_ready(max_wait=10):
     """Kiểm tra MLX Launcher có sẵn sàng nhận request không"""
-    print("🔍 Kiểm tra MLX Launcher có sẵn sàng...")
+    print(f"🔍 Kiểm tra MLX Launcher có sẵn sàng tại {MLX_LAUNCHER}...")
     
     for i in range(max_wait):
         try:
@@ -698,10 +698,14 @@ def check_mlx_launcher_ready(max_wait=10):
                 timeout=5,
                 verify=False  # Disable SSL verification
             )
+            print(f"📊 Response status: {response.status_code}")
             if response.status_code == 200:
                 print("✅ MLX Launcher sẵn sàng!")
                 return True
-        except:
+            else:
+                print(f"⚠️ Status {response.status_code}: {response.text[:100]}")
+        except Exception as e:
+            print(f"❌ Exception: {e}")
             pass
         
         if i < max_wait - 1:
@@ -719,6 +723,7 @@ def start_quick_profile(proxy: str = None):
             "status_code": 503,
             "error_code": "SERVICE_UNAVAILABLE",
             "message": "MLX Launcher chưa sẵn sàng. Vui lòng đợi vài giây.",
+            "detailed_message": f"MLX Launcher không phản hồi sau 10 giây. URL: {MLX_LAUNCHER}/profile/statuses",
             "suggestion": [
                 "Đợi 10-20 giây và thử lại",
                 "Kiểm tra logs MLX: docker exec wm-mega-app tail -f /app/logs/mlx.log",
