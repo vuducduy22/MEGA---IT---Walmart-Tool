@@ -25,9 +25,9 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
 
 # MongoDB connection with authentication
 # Nếu chạy trong Docker: mongodb://wm-mega-mongodb:27017/walmart
-# Nếu chạy ngoài Docker: mongodb://localhost:27017/walmart hoặc IP của server
+# Nếu chạy ngoài Docker (có auth): mongodb://wm_user:wm_mega_2024@localhost:27017/walmart
 import os
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/walmart")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://wm_user:wm_mega@localhost:27017/walmart")
 client = MongoClient(MONGO_URI)
 db = client["walmart"]
 collection_log = db["logs"]

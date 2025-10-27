@@ -28,6 +28,20 @@ if ! command -v mongod &> /dev/null; then
     echo "✅ MongoDB đã được cài đặt và khởi động"
 fi
 
+# Setup MongoDB user
+echo "🔐 Setup MongoDB user..."
+sleep 3  # Đợi MongoDB khởi động
+mongosh --eval "
+use walmart;
+db.createUser({
+  user: 'wm_user',
+  pwd: 'wm_mega',
+  roles: [{role: 'readWrite', db: 'walmart'}]
+});
+" 2>/dev/null || echo "⚠️  User đã tồn tại hoặc có lỗi"
+
+echo "✅ MongoDB setup complete!"
+
 # Lấy version Python
 PYTHON_VERSION=$(python3 --version | awk '{print $2}')
 echo "🔍 Detected Python version: $PYTHON_VERSION"
