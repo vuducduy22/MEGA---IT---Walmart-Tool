@@ -735,7 +735,7 @@ def start_quick_profile(proxy: str = None):
     payload = {
         "browser_type": "mimic",
         "name": "QuickProfile",
-        "os_type": "linux",
+        "os": "linux",
         "automation": "selenium",
         "is_headless": True,
         "browser_version": "mimic_141.3",
@@ -792,7 +792,7 @@ def start_quick_profile(proxy: str = None):
     payload_full = payload.copy()
     payload_minimal = {
         "browser_type": payload["browser_type"],
-        "os_type": payload["os_type"],
+        "os": payload["os"],
         "automation": payload["automation"],
         "is_headless": payload["is_headless"],
         "browser_version": payload.get("browser_version", "mimic_141.3"),
