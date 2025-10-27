@@ -734,10 +734,11 @@ def start_quick_profile(proxy: str = None):
     
     payload = {
         "browser_type": "mimic",
-        "name": "QuickProfile",  # Thay đổi tên để tránh conflict với CapMonster
+        "name": "QuickProfile",
         "os_type": "linux",
         "automation": "selenium",
         "is_headless": True,
+        "browser_version": "mimic",
         "parameters": {
             "fingerprint": {
                 "browser_type": "mimic"
