@@ -734,12 +734,14 @@ def start_quick_profile(proxy: str = None):
     
     payload = {
         "browser_type": "mimic",
+        "name": "QuickProfile",
         "os_type": "linux",
         "automation": "selenium",
-        "core_version": 1,
         "is_headless": True,
-        "proxy": None,
+        "browser_version": "mimic",
         "parameters": {
+            "fingerprint": {
+            },
             "flags": {
                 "navigator_masking": "mask",
                 "audio_masking": "mask",
@@ -769,10 +771,10 @@ def start_quick_profile(proxy: str = None):
         "quickProfilesCount": 1
     }
     
-    # Xử lý proxy nếu có
     if proxy is not None:
         proxy_parts = proxy.split(":")
         if len(proxy_parts) >= 2:
+            # Format: host:port hoặc host:port:username:password hoặc host:port:username:password:extras
             payload["proxy"] = {
                 "host": proxy_parts[0],
                 "type": "http",
@@ -784,12 +786,6 @@ def start_quick_profile(proxy: str = None):
                 payload["proxy"]["password"] = proxy_parts[3]
         else:
             raise ValueError(f"Invalid proxy format: {proxy}. Expected format: 'host:port' or 'host:port:username:password'")
-    else:
-        # Xóa proxy nếu không có
-        del payload["proxy"]
-    
-    # Debug: In payload để kiểm tra
-    print("📦 Payload:", json.dumps(payload, indent=2))
     
     payload_json = json.dumps(payload)
     
