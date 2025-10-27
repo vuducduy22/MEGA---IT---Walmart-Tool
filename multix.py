@@ -790,13 +790,13 @@ def start_quick_profile(proxy: str = None):
     
     # Tạo 2 phiên bản payload: full (cho local) và minimal (cho server)
     payload_full = payload.copy()
+    
+    # MINIMAL payload - bỏ browser_version và core_version vì MLX không chấp nhận
     payload_minimal = {
         "browser_type": payload["browser_type"],
         "os_type": payload["os_type"],
         "automation": payload["automation"],
         "is_headless": payload["is_headless"],
-        "browser_version": payload.get("browser_version", "mimic_141.3"),
-        "core_version": payload.get("core_version", 141),
         "parameters": {
             "flags": payload["parameters"]["flags"],
             "storage": payload["parameters"]["storage"],
