@@ -695,7 +695,8 @@ def check_mlx_launcher_ready(max_wait=10):
             response = requests.get(
                 f"{MLX_LAUNCHER}/profile/statuses", 
                 headers=HEADERS, 
-                timeout=5
+                timeout=5,
+                verify=False  # Disable SSL verification
             )
             if response.status_code == 200:
                 print("✅ MLX Launcher sẵn sàng!")
@@ -783,11 +784,11 @@ def start_quick_profile(proxy: str = None):
     
     payload_json = json.dumps(payload)
     
-    # MLX Launcher chạy trên IPv6 (:::45001), cần dùng HTTP (không phải HTTPS)
+    # MLX Launcher chạy trên IPv6 (:::45001), CHỈ chấp nhận HTTPS!
     # Thứ tự ưu tiên: IPv6 -> IPv4
     urls_to_try = [
-        f"http://[::1]:45001/api/v2/profile/quick",  # IPv6 localhost - ƯU TIÊN
-        f"http://127.0.0.1:45001/api/v2/profile/quick",  # IPv4 localhost - FALLBACK
+        f"https://[::1]:45001/api/v2/profile/quick",  # IPv6 localhost - ƯU TIÊN
+        f"https://127.0.0.1:45001/api/v2/profile/quick",  # IPv4 localhost - FALLBACK
         f"{MLX_LAUNCHER_V2}/profile/quick",  # Config từ config.py
     ]
     
@@ -797,8 +798,14 @@ def start_quick_profile(proxy: str = None):
     for i, url in enumerate(urls_to_try):
         try:
             print(f"🔄 [{i+1}/{len(urls_to_try)}] Thử kết nối: {url}")
-            # Dùng requests đơn giản, KHÔNG dùng SSL
-            response = requests.post(url, headers=HEADERS, data=payload_json, timeout=30)
+            # Dùng HTTPS với SSL verification disabled
+            response = requests.post(
+                url, 
+                headers=HEADERS, 
+                data=payload_json, 
+                timeout=30,
+                verify=False  # Disable SSL verification cho self-signed cert
+            )
             
             print(f"📊 Response status: {response.status_code}")
             

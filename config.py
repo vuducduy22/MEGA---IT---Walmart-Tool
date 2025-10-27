@@ -9,11 +9,11 @@ MLX_BASE = "https://api.multilogin.com"
 # MLX_LAUNCHER_V2 = ("https://launcher.mlx.yt:45001/api/v2")
 # MLX_LAUNCHER_V3 = "https://launcher.mlx.yt:45001/api/v3"
 
-# Sử dụng HTTP localhost - ĐƠN GIẢN NHẤT, hoạt động cho cả local và server
-# Vì MLX Launcher chạy bên trong container, localhost là đúng
-MLX_LAUNCHER = "http://127.0.0.1:45001/api/v1"
-MLX_LAUNCHER_V2 = "http://127.0.0.1:45001/api/v2"
-MLX_LAUNCHER_V3 = "http://127.0.0.1:45001/api/v3"
+# MLX Launcher CHỈ chấp nhận HTTPS (không phải HTTP!)
+# Sử dụng HTTPS localhost
+MLX_LAUNCHER = "https://127.0.0.1:45001/api/v1"
+MLX_LAUNCHER_V2 = "https://127.0.0.1:45001/api/v2"
+MLX_LAUNCHER_V3 = "https://127.0.0.1:45001/api/v3"
 
 # Fallback URLs (không cần thiết lắm nhưng để phòng xa)
 MLX_LAUNCHER_FALLBACK = "http://127.0.0.1:45001/api/v1"
