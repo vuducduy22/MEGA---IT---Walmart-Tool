@@ -144,7 +144,8 @@ def open_profile(state, proxy: str = None):
             # Handle detailed error info từ improved error handling
             if isinstance(profile_info, dict) and profile_info.get("error"):
                 error_details = profile_info
-                error_msg = f"{error_details['detailed_message']}"
+                # Get message with fallback
+                error_msg = error_details.get("detailed_message") or error_details.get("message", "Không rõ lỗi")
                 
                 # Show suggestions
                 suggestions = error_details.get("suggestion", [])
