@@ -42,6 +42,10 @@ backups/
 temp/
 *.tmp
 
+# MultiloginX extracted files
+multilogin/extracted/
+multilogin/mlx
+
 # Google Drive API credentials (SECURITY)
 credentials.json
 token.json

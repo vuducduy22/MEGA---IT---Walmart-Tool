@@ -66,22 +66,28 @@ fi
 
 # 2. Extract MultiloginX if available
 if [ -f "/app/multilogin/multiloginx.deb" ]; then
-    log "Extracting MultiloginX..."
-    mkdir -p /app/multilogin/extracted
-    
-    if dpkg-deb -x /app/multilogin/multiloginx.deb /app/multilogin/extracted; then
-        # Find and copy executable
-        EXECUTABLE=$(find /app/multilogin/extracted -type f -executable | head -n 1)
-        if [ -n "$EXECUTABLE" ]; then
-            EXEC_NAME=$(basename "$EXECUTABLE")
-            cp "$EXECUTABLE" "/app/multilogin/$EXEC_NAME"
-            chmod +x "/app/multilogin/$EXEC_NAME"
-            log_success "MultiloginX extracted: $EXEC_NAME"
+    # Check if already extracted
+    if [ ! -f "/app/multilogin/extracted/usr/bin/mlx" ] || [ ! -f "/app/multilogin/extracted/opt/mlx/agent.bin" ]; then
+        log "Extracting MultiloginX..."
+        rm -rf /app/multilogin/extracted
+        mkdir -p /app/multilogin/extracted
+        
+        if dpkg-deb -x /app/multilogin/multiloginx.deb /app/multilogin/extracted; then
+            # Find and copy executable
+            EXECUTABLE=$(find /app/multilogin/extracted -type f -executable | head -n 1)
+            if [ -n "$EXECUTABLE" ]; then
+                EXEC_NAME=$(basename "$EXECUTABLE")
+                cp "$EXECUTABLE" "/app/multilogin/$EXEC_NAME"
+                chmod +x "/app/multilogin/$EXEC_NAME"
+                log_success "MultiloginX extracted: $EXEC_NAME"
+            else
+                log_warning "No executable found in MultiloginX package"
+            fi
         else
-            log_warning "No executable found in MultiloginX package"
+            log_error "Failed to extract MultiloginX package"
         fi
     else
-        log_error "Failed to extract MultiloginX package"
+        log "MultiloginX already extracted, skipping..."
     fi
 else
     log_warning "MultiloginX .deb file not found, skipping..."
@@ -92,7 +98,7 @@ if [ -f "/app/multilogin/mlx" ]; then
     log "Setting up MLX Agent..."
     
     # Create /opt/mlx directory if not exists
-    sudo mkdir -p /opt/mlx
+    sudo mkdir -p /opt/mlx /home/appuser/mlx/deps
     
     # Copy agent.bin to correct location if not exists
     if [ ! -f "/opt/mlx/agent.bin" ] && [ -f "/app/multilogin/extracted/opt/mlx/agent.bin" ]; then
@@ -100,6 +106,11 @@ if [ -f "/app/multilogin/mlx" ]; then
         sudo chmod +x /opt/mlx/agent.bin
         log "Copied agent.bin to /opt/mlx/"
     fi
+    
+    # Ensure appuser has access to ~/mlx/deps
+    sudo chown -R appuser:appuser /home/appuser/mlx
+    mkdir -p /home/appuser/mlx/deps
+    sudo chown -R appuser:appuser /home/appuser/mlx/deps
     
     # Skip dependencies installation (already installed in Dockerfile)
     log "Skipping MLX Agent dependencies installation..."
@@ -109,9 +120,14 @@ if [ -f "/app/multilogin/mlx" ]; then
     # Fix ownership for logs directory
     mkdir -p /app/logs
     sudo chown -R appuser:appuser /app/logs
+    
+    # Kill any existing MLX process
+    pkill -f "mlx-agent" 2>/dev/null || true
+    sleep 1
+    
     nohup /app/multilogin/mlx > /app/logs/mlx.log 2>&1 &
     MLX_PID=$!
-    sleep 3
+    sleep 5
     
     # Check if MLX Agent is running
     if ps -p $MLX_PID > /dev/null 2>&1; then
