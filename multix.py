@@ -738,8 +738,7 @@ def start_quick_profile(proxy: str = None):
         "os_type": "linux",
         "automation": "selenium",
         "is_headless": True,
-        "fingerprint": {
-            },
+        "browser_version": "mimic",
         "parameters": {
             "flags": {
                 "navigator_masking": "mask",
@@ -766,8 +765,7 @@ def start_quick_profile(proxy: str = None):
             "custom_start_urls": [
                 "https://www.google.com/"
             ]
-        },
-        "quickProfilesCount": 1
+        }
     }
     
     if proxy is not None:
