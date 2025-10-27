@@ -740,6 +740,8 @@ def start_quick_profile(proxy: str = None):
         "is_headless": True,
         "browser_version": "mimic",
         "parameters": {
+            "fingerprint": {
+            },
             "flags": {
                 "navigator_masking": "mask",
                 "audio_masking": "mask",
@@ -765,7 +767,8 @@ def start_quick_profile(proxy: str = None):
             "custom_start_urls": [
                 "https://www.google.com/"
             ]
-        }
+        },
+        "quickProfilesCount": 1
     }
     
     if proxy is not None:
@@ -784,8 +787,25 @@ def start_quick_profile(proxy: str = None):
         else:
             raise ValueError(f"Invalid proxy format: {proxy}. Expected format: 'host:port' or 'host:port:username:password'")
     
-    payload_json = json.dumps(payload)
-    print("📦 Payload:", json.dumps(payload, indent=2))
+    # Tạo 2 phiên bản payload: full (cho local) và minimal (cho server)
+    payload_full = payload.copy()
+    payload_minimal = {
+        "browser_type": payload["browser_type"],
+        "os_type": payload["os_type"],
+        "automation": payload["automation"],
+        "is_headless": payload["is_headless"],
+        "parameters": {
+            "flags": payload["parameters"]["flags"],
+            "storage": payload["parameters"]["storage"],
+            "custom_start_urls": payload["parameters"]["custom_start_urls"]
+        }
+    }
+    
+    # Add proxy if exists
+    if "proxy" in payload:
+        payload_minimal["proxy"] = payload["proxy"]
+    
+    print("📦 Payload FULL:", json.dumps(payload_full, indent=2))
     
     # MLX Launcher chạy trên IPv6 (:::45001), CHỈ chấp nhận HTTPS!
     # Thứ tự ưu tiên: IPv6 -> IPv4
@@ -798,53 +818,70 @@ def start_quick_profile(proxy: str = None):
     last_error = None
     response = None
     
-    for i, url in enumerate(urls_to_try):
-        try:
-            print(f"🔄 [{i+1}/{len(urls_to_try)}] Thử kết nối: {url}")
-            # Dùng HTTPS với SSL verification disabled
-            response = requests.post(
-                url, 
-                headers=HEADERS, 
-                data=payload_json, 
-                timeout=30,
-                verify=False  # Disable SSL verification cho self-signed cert
-            )
-            
-            print(f"📊 Response status: {response.status_code}")
-            
-            # Kiểm tra response
-            if response.status_code == 200:
-                # Parse JSON để kiểm tra status code từ MLX
-                try:
-                    result = response.json()
-                    if result.get("status", {}).get("http_code") == 200:
-                        print(f"✅ Kết nối thành công với: {url}")
-                        break
-                    else:
-                        print(f"⚠️ MLX response: {result}")
-                except:
-                    pass
+    # Thử cả 2 phiên bản payload
+    payloads_to_try = [
+        ("full", payload_full),
+        ("minimal", payload_minimal)
+    ]
+    
+    for payload_name, test_payload in payloads_to_try:
+        payload_json = json.dumps(test_payload)
+        print(f"🧪 Thử payload: {payload_name}")
+        
+        for i, url in enumerate(urls_to_try):
+            try:
+                print(f"🔄 [{i+1}/{len(urls_to_try)}] Thử kết nối: {url}")
+                # Dùng HTTPS với SSL verification disabled
+                response = requests.post(
+                    url, 
+                    headers=HEADERS, 
+                    data=payload_json, 
+                    timeout=30,
+                    verify=False  # Disable SSL verification cho self-signed cert
+                )
                 
-                # Nếu status code là 200 nhưng không parse được JSON
-                break
-            else:
-                print(f"⚠️ HTTP {response.status_code}: {response.text[:200]}")
+                print(f"📊 Response status: {response.status_code}")
+                
+                # Kiểm tra response
+                if response.status_code == 200:
+                    # Parse JSON để kiểm tra status code từ MLX
+                    try:
+                        result = response.json()
+                        if result.get("status", {}).get("http_code") == 200:
+                            print(f"✅ Kết nối thành công với: {url} (payload: {payload_name})")
+                            break
+                        else:
+                            print(f"⚠️ MLX response: {result}")
+                    except:
+                        pass
+                    
+                    # Nếu status code là 200 nhưng không parse được JSON
+                    break
+                elif response.status_code == 400 and "BAD_REQUEST_VALUES" in response.text:
+                    # Nếu payload không đúng format, thử payload khác
+                    print(f"⚠️ HTTP {response.status_code}: {response.text[:200]}")
+                    print(f"⏭️ Thử payload khác...")
+                    break
+                else:
+                    print(f"⚠️ HTTP {response.status_code}: {response.text[:200]}")
+                    if i < len(urls_to_try) - 1:
+                        print("⏭️ Thử URL tiếp theo...")
+                        time.sleep(0.5)  # Delay ngắn giữa các lần thử
+                        continue
+                        
+            except Exception as e:
+                last_error = e
+                print(f"❌ Lỗi: {e}")
                 if i < len(urls_to_try) - 1:
                     print("⏭️ Thử URL tiếp theo...")
                     time.sleep(0.5)  # Delay ngắn giữa các lần thử
                     continue
-                    
-        except Exception as e:
-            last_error = e
-            print(f"❌ Lỗi: {e}")
-            if i < len(urls_to_try) - 1:
-                print("⏭️ Thử URL tiếp theo...")
-                time.sleep(0.5)  # Delay ngắn giữa các lần thử
-                continue
-            else:
-                print(f"❌ Tất cả URLs đều fail. Lỗi cuối: {last_error}")
+        
+        # Nếu thành công với payload này, dừng
+        if response is not None and response.status_code == 200:
+            break
     
-    # Nếu tất cả URLs đều fail
+    # Nếu tất cả payloads và URLs đều fail
     if response is None or response.status_code != 200:
             return None, {
                 "error": True,
