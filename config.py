@@ -24,7 +24,10 @@ AWS_FOLDER_NAME = os.getenv("AWS_FOLDER_NAME", "images")
 AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
 
 # MongoDB connection with authentication
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://192.168.9.179:27017/walmart")
+# Nếu chạy trong Docker: mongodb://wm-mega-mongodb:27017/walmart
+# Nếu chạy ngoài Docker: mongodb://localhost:27017/walmart hoặc IP của server
+import os
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/walmart")
 client = MongoClient(MONGO_URI)
 db = client["walmart"]
 collection_log = db["logs"]

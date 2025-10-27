@@ -16,6 +16,18 @@ if ! command -v Xvfb &> /dev/null; then
     sudo apt install -y xvfb x11-utils
 fi
 
+# Kiểm tra và cài MongoDB
+if ! command -v mongod &> /dev/null; then
+    echo "📦 Cài đặt MongoDB..."
+    curl -fsSL https://pgp.mongodb.com/server-7.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
+    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+    sudo apt update
+    sudo apt install -y mongodb-org
+    sudo systemctl enable mongod
+    sudo systemctl start mongod
+    echo "✅ MongoDB đã được cài đặt và khởi động"
+fi
+
 # Lấy version Python
 PYTHON_VERSION=$(python3 --version | awk '{print $2}')
 echo "🔍 Detected Python version: $PYTHON_VERSION"
