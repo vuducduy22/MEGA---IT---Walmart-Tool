@@ -4,10 +4,16 @@ set -e  # Exit on any error
 
 ENV_NAME="env"
 
-# Kiểm tra Python
+# Kiểm tra và cài đặt dependencies
 if ! command -v python3 &> /dev/null; then
     echo "❌ Python 3 không tìm thấy. Đang cài đặt..."
-    sudo apt update && sudo apt install -y python3 python3-venv python3-pip
+    sudo apt update && sudo apt install -y python3 python3-venv python3-pip xvfb
+fi
+
+# Cài Xvfb nếu chưa có
+if ! command -v Xvfb &> /dev/null; then
+    echo "📦 Cài đặt Xvfb..."
+    sudo apt install -y xvfb x11-utils
 fi
 
 # Lấy version Python
