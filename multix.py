@@ -739,6 +739,7 @@ def start_quick_profile(proxy: str = None):
         "automation": "selenium",
         "is_headless": True,
         "browser_version": "mimic_141.3",
+        "core_version": 141,
         "parameters": {
             "fingerprint": {
             },
@@ -795,6 +796,7 @@ def start_quick_profile(proxy: str = None):
         "automation": payload["automation"],
         "is_headless": payload["is_headless"],
         "browser_version": payload.get("browser_version", "mimic_141.3"),
+        "core_version": payload.get("core_version", 141),
         "parameters": {
             "flags": payload["parameters"]["flags"],
             "storage": payload["parameters"]["storage"],
