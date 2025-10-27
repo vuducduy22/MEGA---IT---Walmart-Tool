@@ -738,10 +738,9 @@ def start_quick_profile(proxy: str = None):
         "os_type": "linux",
         "automation": "selenium",
         "is_headless": True,
-        "browser_version": "mimic",
-        "parameters": {
-            "fingerprint": {
+        "fingerprint": {
             },
+        "parameters": {
             "flags": {
                 "navigator_masking": "mask",
                 "audio_masking": "mask",
@@ -788,6 +787,7 @@ def start_quick_profile(proxy: str = None):
             raise ValueError(f"Invalid proxy format: {proxy}. Expected format: 'host:port' or 'host:port:username:password'")
     
     payload_json = json.dumps(payload)
+    print("📦 Payload:", json.dumps(payload, indent=2))
     
     # MLX Launcher chạy trên IPv6 (:::45001), CHỈ chấp nhận HTTPS!
     # Thứ tự ưu tiên: IPv6 -> IPv4
