@@ -4,24 +4,21 @@ import os
 
 dotenv.load_dotenv()
 
-MLX_BASE = "https://api.multilogin.com"
-MLX_LAUNCHER = "https://launcher.mlx.yt:45001/api/v1"
-MLX_LAUNCHER_V2 = ("https://launcher.mlx.yt:45001/api/v2")
-MLX_LAUNCHER_V3 = "https://launcher.mlx.yt:45001/api/v3"
+# MLX_BASE = "https://api.multilogin.com"
+# MLX_LAUNCHER = "https://launcher.mlx.yt:45001/api/v1"
+# MLX_LAUNCHER_V2 = ("https://launcher.mlx.yt:45001/api/v2")
+# MLX_LAUNCHER_V3 = "https://launcher.mlx.yt:45001/api/v3"
 
-# MLX_LAUNCHER = "https://192.168.9.179:45001/api/v1"
-# MLX_LAUNCHER_V2 = "https://192.168.9.179:45001/api/v2"
-# MLX_LAUNCHER_V3 = "https://192.168.9.179:45001/api/v3"
+# Sử dụng HTTP localhost - ĐƠN GIẢN NHẤT, hoạt động cho cả local và server
+# Vì MLX Launcher chạy bên trong container, localhost là đúng
+MLX_LAUNCHER = "http://127.0.0.1:45001/api/v1"
+MLX_LAUNCHER_V2 = "http://127.0.0.1:45001/api/v2"
+MLX_LAUNCHER_V3 = "http://127.0.0.1:45001/api/v3"
 
-# Sử dụng HTTPS IPv6 localhost vì launcher chạy trên IPv6
-MLX_LAUNCHER_LOCAL = "https://[::1]:45001/api/v1"
-MLX_LAUNCHER_V2_LOCAL = "https://[::1]:45001/api/v2"
-MLX_LAUNCHER_V3_LOCAL = "https://[::1]:45001/api/v3"
-
-# Fallback URLs - thử localhost trước nếu remote fail
-MLX_LAUNCHER_FALLBACK = "https://[::1]:45001/api/v1"
-MLX_LAUNCHER_V2_FALLBACK = "https://[::1]:45001/api/v2"
-MLX_LAUNCHER_V3_FALLBACK = "https://[::1]:45001/api/v3"
+# Fallback URLs (không cần thiết lắm nhưng để phòng xa)
+MLX_LAUNCHER_FALLBACK = "http://127.0.0.1:45001/api/v1"
+MLX_LAUNCHER_V2_FALLBACK = "http://127.0.0.1:45001/api/v2"
+MLX_LAUNCHER_V3_FALLBACK = "http://127.0.0.1:45001/api/v3"
 
 LOCALHOST = "http://127.0.0.1"
 HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}

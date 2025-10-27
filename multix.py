@@ -5,6 +5,7 @@ import requests
 import hashlib
 import json
 import logging
+import time
 import pyotp
 from datetime import datetime, timedelta
 from selenium.webdriver.chromium.options import ChromiumOptions
@@ -688,7 +689,7 @@ def start_quick_profile(proxy: str = None):
     payload = {
         "browser_type": "mimic",
         "name": "QuickProfile",  # Thay đổi tên để tránh conflict với CapMonster
-        "os_type": "android",
+        "os_type": "linux",
         "automation": "selenium",
         "is_headless": True,
         "parameters": {
@@ -702,8 +703,8 @@ def start_quick_profile(proxy: str = None):
                 "geolocation_popup": "prompt",
                 "geolocation_masking": "mask",
                 "timezone_masking": "mask",
-                "graphics_noise": "disabled",
-                "graphics_masking": "disabled",
+                "graphics_noise": "mask",
+                "graphics_masking": "mask",
                 "webrtc_masking": "mask",
                 "fonts_masking": "mask",
                 "media_devices_masking": "mask",
@@ -742,12 +743,12 @@ def start_quick_profile(proxy: str = None):
     
     payload_json = json.dumps(payload)
     
-    # Sử dụng SSL session để xử lý lỗi SSL với fallback strategy
+    # MLX Launcher chạy trên IPv6 (:::45001), cần dùng HTTP (không phải HTTPS)
+    # Thứ tự ưu tiên: IPv6 -> IPv4
     urls_to_try = [
-        f"{MLX_LAUNCHER_V2}/profile/quick",  # HTTPS remote
-        f"{MLX_LAUNCHER_V2_FALLBACK}/profile/quick",  # HTTPS IPv6 localhost fallback
-        f"https://[::1]:45001/api/v2/profile/quick",  # Direct HTTPS IPv6 localhost
-        f"https://127.0.0.1:45001/api/v2/profile/quick"  # Fallback IPv4 localhost
+        f"http://[::1]:45001/api/v2/profile/quick",  # IPv6 localhost - ƯU TIÊN
+        f"http://127.0.0.1:45001/api/v2/profile/quick",  # IPv4 localhost - FALLBACK
+        f"{MLX_LAUNCHER_V2}/profile/quick",  # Config từ config.py
     ]
     
     last_error = None
@@ -755,31 +756,43 @@ def start_quick_profile(proxy: str = None):
     
     for i, url in enumerate(urls_to_try):
         try:
-            print(f"Thử kết nối đến: {url}")
-            ssl_session = create_ssl_session()
-            response = ssl_session.post(url, data=payload_json)
+            print(f"🔄 [{i+1}/{len(urls_to_try)}] Thử kết nối: {url}")
+            # Dùng requests đơn giản, KHÔNG dùng SSL
+            response = requests.post(url, headers=HEADERS, data=payload_json, timeout=30)
             
-            # Kiểm tra response status
+            print(f"📊 Response status: {response.status_code}")
+            
+            # Kiểm tra response
             if response.status_code == 200:
-                print(f"Kết nối thành công với: {url}")
+                # Parse JSON để kiểm tra status code từ MLX
+                try:
+                    result = response.json()
+                    if result.get("status", {}).get("http_code") == 200:
+                        print(f"✅ Kết nối thành công với: {url}")
+                        break
+                    else:
+                        print(f"⚠️ MLX response: {result}")
+                except:
+                    pass
+                
+                # Nếu status code là 200 nhưng không parse được JSON
                 break
             else:
-                print(f"Response status {response.status_code} từ {url}")
-                try:
-                    error_detail = response.json()
-                    print(f"Chi tiết lỗi: {error_detail}")
-                except:
-                    print(f"Response text: {response.text}")
-                
+                print(f"⚠️ HTTP {response.status_code}: {response.text[:200]}")
                 if i < len(urls_to_try) - 1:
+                    print("⏭️ Thử URL tiếp theo...")
+                    time.sleep(0.5)  # Delay ngắn giữa các lần thử
                     continue
                     
         except Exception as e:
             last_error = e
-            print(f"Lỗi kết nối đến {url}: {e}")
+            print(f"❌ Lỗi: {e}")
             if i < len(urls_to_try) - 1:
-                print("Thử URL tiếp theo...")
+                print("⏭️ Thử URL tiếp theo...")
+                time.sleep(0.5)  # Delay ngắn giữa các lần thử
                 continue
+            else:
+                print(f"❌ Tất cả URLs đều fail. Lỗi cuối: {last_error}")
     
     # Nếu tất cả URLs đều fail
     if response is None or response.status_code != 200:
