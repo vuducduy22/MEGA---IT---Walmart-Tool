@@ -788,6 +788,9 @@ def start_quick_profile(proxy: str = None):
         # Xóa proxy nếu không có
         del payload["proxy"]
     
+    # Debug: In payload để kiểm tra
+    print("📦 Payload:", json.dumps(payload, indent=2))
+    
     payload_json = json.dumps(payload)
     
     # MLX Launcher chạy trên IPv6 (:::45001), CHỈ chấp nhận HTTPS!
