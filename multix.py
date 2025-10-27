@@ -741,7 +741,6 @@ def start_quick_profile(proxy: str = None):
         "browser_version": "mimic_141.3",
         "core_version": 141,
         "parameters": {
-            "fingerprint": {},
             "flags": {
                 "navigator_masking": "mask",
                 "audio_masking": "mask",
@@ -749,15 +748,12 @@ def start_quick_profile(proxy: str = None):
                 "geolocation_popup": "prompt",
                 "geolocation_masking": "mask",
                 "timezone_masking": "mask",
-                "graphics_noise": "mask",
-                "graphics_masking": "mask",
                 "webrtc_masking": "mask",
                 "fonts_masking": "mask",
                 "media_devices_masking": "mask",
                 "screen_masking": "mask",
                 "proxy_masking": "disabled" if proxy is None else "custom",
                 "ports_masking": "mask",
-                "canvas_noise": "mask",
                 "startup_behavior": "custom"
             },
             "storage": {
