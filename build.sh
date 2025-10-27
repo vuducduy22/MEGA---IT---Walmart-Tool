@@ -28,32 +28,20 @@ else
     echo "✅ MongoDB đã được cài đặt từ trước"
 fi
 
-# Khởi động MongoDB (không có authentication)
+# Khởi động MongoDB (KHÔNG có authentication để đơn giản)
 echo "🚀 Start MongoDB..."
 sudo systemctl stop mongod 2>/dev/null || true
 sudo systemctl start mongod
 sudo systemctl enable mongod
 sleep 3
 
-# Setup MongoDB user (không có authentication ban đầu)
-echo "🔐 Setup MongoDB user..."
-mongosh --eval "
-use walmart;
-db.createUser({
-  user: 'wm_user',
-  pwd: 'wm_mega',
-  roles: [{role: 'readWrite', db: 'walmart'}]
-});
-" 2>/dev/null || echo "⚠️  User có thể đã tồn tại"
-
-# Bật authentication
-echo "🔒 Enable MongoDB authentication..."
-sudo sed -i 's/# security:/security:/g' /etc/mongod.conf
-sudo sed -i 's/#   authorization: enabled/  authorization: enabled/g' /etc/mongod.conf || sudo sed -i '/security:/a \  authorization: enabled' /etc/mongod.conf
+# Tắt authentication
+echo "🔓 Disable MongoDB authentication..."
+sudo sed -i 's/^  authorization: enabled/#  authorization: disabled/g' /etc/mongod.conf || true
 sudo systemctl restart mongod
-sleep 3
+sleep 2
 
-echo "✅ MongoDB setup complete with authentication!"
+echo "✅ MongoDB setup complete (no authentication)!"
 
 # Lấy version Python
 PYTHON_VERSION=$(python3 --version | awk '{print $2}')
