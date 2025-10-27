@@ -5,15 +5,19 @@ set -e  # Exit on any error
 ENV_NAME="env"
 
 # Kiểm tra Python
-if ! command -v python3.10 &> /dev/null; then
-    echo "❌ Python 3.10 không tìm thấy. Đang cài đặt..."
-    sudo apt update && sudo apt install -y python3.10 python3.10-venv python3-pip
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Python 3 không tìm thấy. Đang cài đặt..."
+    sudo apt update && sudo apt install -y python3 python3-venv python3-pip
 fi
+
+# Lấy version Python
+PYTHON_VERSION=$(python3 --version | awk '{print $2}')
+echo "🔍 Detected Python version: $PYTHON_VERSION"
 
 # Tạo virtual environment nếu chưa có
 if [ ! -d "$ENV_NAME" ]; then
-    echo "🚀 Tạo virtual environment: $ENV_NAME (Python 3.10)..."
-    python3.10 -m venv $ENV_NAME
+    echo "🚀 Tạo virtual environment: $ENV_NAME..."
+    python3 -m venv $ENV_NAME
     echo "✅ Đã tạo môi trường $ENV_NAME!"
 fi
 
