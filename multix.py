@@ -738,7 +738,7 @@ def start_quick_profile(proxy: str = None):
         "os_type": "linux",
         "automation": "selenium",
         "is_headless": True,
-        "browser_version": "141",
+        "browser_version": "mimic_141.3",
         "parameters": {
             "fingerprint": {
             },
