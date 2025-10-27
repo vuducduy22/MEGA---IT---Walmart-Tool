@@ -685,7 +685,47 @@ def create_ssl_session():
     
     return session
 
+def check_mlx_launcher_ready(max_wait=10):
+    """Kiểm tra MLX Launcher có sẵn sàng nhận request không"""
+    print("🔍 Kiểm tra MLX Launcher có sẵn sàng...")
+    
+    for i in range(max_wait):
+        try:
+            # Test với một GET request đơn giản
+            response = requests.get(
+                f"{MLX_LAUNCHER}/profile/statuses", 
+                headers=HEADERS, 
+                timeout=5
+            )
+            if response.status_code == 200:
+                print("✅ MLX Launcher sẵn sàng!")
+                return True
+        except:
+            pass
+        
+        if i < max_wait - 1:
+            print(f"⏳ Đợi MLX Launcher sẵn sàng ({i+1}/{max_wait})...")
+            time.sleep(1)
+    
+    print("❌ MLX Launcher chưa sẵn sàng sau {max_wait} giây")
+    return False
+
 def start_quick_profile(proxy: str = None):
+    # Kiểm tra MLX Launcher có sẵn sàng không
+    if not check_mlx_launcher_ready():
+        return None, {
+            "error": True,
+            "status_code": 503,
+            "error_code": "SERVICE_UNAVAILABLE",
+            "message": "MLX Launcher chưa sẵn sàng. Vui lòng đợi vài giây.",
+            "suggestion": [
+                "Đợi 10-20 giây và thử lại",
+                "Kiểm tra logs MLX: docker exec wm-mega-app tail -f /app/logs/mlx.log",
+                "Restart MLX: docker-compose restart wm-mega"
+            ]
+        }
+    
+    
     payload = {
         "browser_type": "mimic",
         "name": "QuickProfile",  # Thay đổi tên để tránh conflict với CapMonster
@@ -796,21 +836,21 @@ def start_quick_profile(proxy: str = None):
     
     # Nếu tất cả URLs đều fail
     if response is None or response.status_code != 200:
-        return None, {
-            "error": True,
-            "status_code": 500,
-            "error_code": "CONNECTION_FAILED",
+            return None, {
+                "error": True,
+                "status_code": 500,
+                "error_code": "CONNECTION_FAILED",
             "message": f"Không thể kết nối đến Multilogin Launcher sau khi thử {len(urls_to_try)} URLs",
             "detailed_message": f"Lỗi cuối cùng: {last_error}",
-            "suggestion": [
-                "Kiểm tra Multilogin Launcher có đang chạy không",
-                "Kiểm tra kết nối mạng",
-                "Thử restart Multilogin Launcher",
+                "suggestion": [
+                    "Kiểm tra Multilogin Launcher có đang chạy không",
+                    "Kiểm tra kết nối mạng",
+                    "Thử restart Multilogin Launcher",
                 "Kiểm tra firewall settings",
                 "Kiểm tra port 45001 có bị block không",
                 "Thử chạy Multilogin Launcher trên localhost"
-            ]
-        }
+                ]
+            }
     print(response.json())
     if response.json()["status"]["http_code"] == 200:
         selenium_port = response.json()["data"]["port"]
