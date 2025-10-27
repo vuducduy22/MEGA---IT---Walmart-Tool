@@ -92,9 +92,8 @@ docker-compose down && docker-compose build --no-cache wm-mega && docker-compose
 
 docker exec -it wm-mega-app /bin/bash
 
+sudo systemctl start mongod
+sudo systemctl enable mongod
 
-curl -v -X POST http://127.0.0.1:45001/api/v2/profile/quick      -H "Content-Type: application/json"      -H "Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJicGRzLmJ1Y2tldCI6Im1seC1icGRzLXByb2QtZXUtMSIsIm1hY2hpbmVJRCI6IiIsInByb2R1Y3RJRCI6IiIsIndvcmtzcGFjZVJvbGUiOiJvd25lciIsInZlcmlmaWVkIjp0cnVlLCJzaGFyZElEIjoiY2JlMTM4MDAtYmJhZi00YzhmLTgwYjMtMTk3Zjg5NjM5NGYyIiwidXNlcklEIjoiMTAxZjlmOTctMDI2ZC00MTUxLWEyYjgtZTkzZGI5OTI0OThjIiwiZW1haWwiOiJwaHVvbmdhbmh0OTNAaWFydC5hc2lhIiwiaXNBdXRvbWF0aW9uIjp0cnVlLCJ3b3Jrc3BhY2VJRCI6ImVkZmEwNjViLTQyNzQtNDc0Mi05NzgzLWQxMjg0ZWEwMjYyYSIsImp0aSI6IjU1NjMxNTc0LTNiZjMtNDE3Yy04M2VhLTYxYWMzZjdhYmUyMiIsInN1YiI6Ik1MWCIsImlzcyI6IjEwMWY5Zjk3LTAyNmQtNDE1MS1hMmI4LWU5M2RiOTkyNDk4YyIsImlhdCI6MTc2MTI5ODk3NCwiZXhwIjoyMDgyNzA2OTc0fQ.TGp3NDXC9gIMaF9zPrVyY3JXQXTYalkK6e5Piw7WzXgF2uI3pwKNwmNZ88w38gChKKisyULtCfdlRrOOqJo7Xw"      -d '{
-           "browser_type":"mimic",
-           "name":"QuickProfile",
-           "os":"linux"
-         }'
+sudo systemctl restart mongod
+sudo systemctl status mongod
