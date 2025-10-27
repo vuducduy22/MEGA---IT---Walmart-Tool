@@ -7,9 +7,9 @@ services:
       dockerfile: Dockerfile
     container_name: wm-mega-app
     hostname: wm-mega
-    network_mode: "host"  # Cho phép truy cập localhost của HOST
-    ports:
-      - "5000:5000"
+    network_mode: "host"  # Cho phép truy cập localhost của HOST (nhưng KHÔNG dùng được với networks/ports)
+    # ports:  # Không dùng được với network_mode: host
+    #   - "5000:5000"
     volumes:
       # Application data
       - ./uploads:/app/uploads
@@ -25,13 +25,13 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    networks:
-      - wm-mega-network
-    # DNS configuration for external connectivity
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-      - 1.1.1.1
+    # networks:  # Không dùng được với network_mode: host
+    #   - wm-mega-network
+    # DNS configuration - Không cần với host network
+    # dns:
+    #   - 8.8.8.8
+    #   - 8.8.4.4
+    #   - 1.1.1.1
     # Resource limits
     deploy:
       resources:
