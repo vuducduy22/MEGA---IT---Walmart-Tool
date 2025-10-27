@@ -5,15 +5,9 @@ import os
 dotenv.load_dotenv()
 
 MLX_BASE = "https://api.multilogin.com"
-# MLX_LAUNCHER = "https://launcher.mlx.yt:45001/api/v1"
-# MLX_LAUNCHER_V2 = ("https://launcher.mlx.yt:45001/api/v2")
-# MLX_LAUNCHER_V3 = "https://launcher.mlx.yt:45001/api/v3"
-
-# MLX Launcher chạy trên máy HOST (bên ngoài Docker)
-# Với network_mode: "host", container có thể truy cập localhost của HOST
-MLX_LAUNCHER = "https://127.0.0.1:45001/api/v1"
-MLX_LAUNCHER_V2 = "https://127.0.0.1:45001/api/v2"
-MLX_LAUNCHER_V3 = "https://127.0.0.1:45001/api/v3"
+MLX_LAUNCHER = "https://launcher.mlx.yt:45001/api/v1"
+MLX_LAUNCHER_V2 = ("https://launcher.mlx.yt:45001/api/v2")
+MLX_LAUNCHER_V3 = "https://launcher.mlx.yt:45001/api/v3"
 
 LOCALHOST = "http://127.0.0.1"
 HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}

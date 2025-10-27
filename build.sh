@@ -2,24 +2,28 @@
 
 set -e  # Exit on any error
 
-ENV_NAME="myenv"
+ENV_NAME="env"
 
-# Initialize conda
-echo "🔧 Initializing conda..."
-eval "$(conda shell.bash hook)"
+# Kiểm tra Python
+if ! command -v python3.10 &> /dev/null; then
+    echo "❌ Python 3.10 không tìm thấy. Đang cài đặt..."
+    sudo apt update && sudo apt install -y python3.10 python3.10-venv python3-pip
+fi
 
-# Kiểm tra xem môi trường đã tồn tại chưa
-if conda env list | grep -qE "^$ENV_NAME\s"; then
-    echo "✅ Môi trường Conda '$ENV_NAME' đã tồn tại. Bỏ qua bước tạo."
-else
-    echo "🚀 Tạo môi trường Conda: $ENV_NAME (Python 3.10)..."
-    conda create -n $ENV_NAME python=3.10 -y
+# Tạo virtual environment nếu chưa có
+if [ ! -d "$ENV_NAME" ]; then
+    echo "🚀 Tạo virtual environment: $ENV_NAME (Python 3.10)..."
+    python3.10 -m venv $ENV_NAME
     echo "✅ Đã tạo môi trường $ENV_NAME!"
 fi
 
 # Kích hoạt môi trường
 echo "⚙️  Kích hoạt môi trường..."
-conda activate $ENV_NAME
+source $ENV_NAME/bin/activate
+
+# Upgrade pip
+echo "📦 Upgrade pip..."
+pip install --upgrade pip
 
 # Cài đặt thư viện từ requirements.txt
 echo "📦 Cài đặt các gói trong requirements.txt..."
@@ -110,7 +114,11 @@ lsof -ti:5000 | xargs kill -9 2>/dev/null || echo "No process running on port 50
 
 echo "Chạy Flask app..."
 if [ -f "app.py" ]; then
-    python3 app.py
+    python3 app.py &
+    APP_PID=$!
+    echo "✅ Flask app started with PID: $APP_PID"
+    echo "🌐 App available at: http://localhost:5000"
+    wait $APP_PID
 else
     echo "❌ Error: app.py not found!"
     exit 1
