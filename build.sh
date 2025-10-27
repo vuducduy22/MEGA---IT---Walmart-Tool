@@ -30,18 +30,29 @@ fi
 
 # Khởi động MongoDB (KHÔNG có authentication để đơn giản)
 echo "🚀 Start MongoDB..."
+
+# Lấy IP của server
+SERVER_IP=$(hostname -I | awk '{print $1}')
+echo "🔍 Server IP: $SERVER_IP"
+
+# Stop MongoDB
 sudo systemctl stop mongod 2>/dev/null || true
-sudo systemctl start mongod
-sudo systemctl enable mongod
-sleep 3
+
+# Config MongoDB để bind IP server
+echo "🔧 Config MongoDB to bind to server IP..."
+sudo sed -i "s/bindIp: 127.0.0.1/bindIp: 127.0.0.1,$SERVER_IP/g" /etc/mongod.conf || sudo sed -i "/net:/a \  bindIp: 0.0.0.0" /etc/mongod.conf
 
 # Tắt authentication
 echo "🔓 Disable MongoDB authentication..."
 sudo sed -i 's/^  authorization: enabled/#  authorization: disabled/g' /etc/mongod.conf || true
-sudo systemctl restart mongod
-sleep 2
+sudo sed -i 's/^    authorization: enabled/#    authorization: disabled/g' /etc/mongod.conf || true
 
-echo "✅ MongoDB setup complete (no authentication)!"
+# Start MongoDB
+sudo systemctl start mongod
+sudo systemctl enable mongod
+sleep 3
+
+echo "✅ MongoDB setup complete (no authentication, bind $SERVER_IP)!"
 
 # Lấy version Python
 PYTHON_VERSION=$(python3 --version | awk '{print $2}')
