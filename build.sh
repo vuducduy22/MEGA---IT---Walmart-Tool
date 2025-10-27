@@ -23,14 +23,20 @@ if ! command -v mongod &> /dev/null; then
     echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
     sudo apt update
     sudo apt install -y mongodb-org
-    sudo systemctl enable mongod
-    sudo systemctl start mongod
-    echo "✅ MongoDB đã được cài đặt và khởi động"
+    echo "✅ MongoDB đã được cài đặt"
+else
+    echo "✅ MongoDB đã được cài đặt từ trước"
 fi
 
-# Setup MongoDB user
+# Khởi động MongoDB (không có authentication)
+echo "🚀 Start MongoDB..."
+sudo systemctl stop mongod 2>/dev/null || true
+sudo systemctl start mongod
+sudo systemctl enable mongod
+sleep 3
+
+# Setup MongoDB user (không có authentication ban đầu)
 echo "🔐 Setup MongoDB user..."
-sleep 3  # Đợi MongoDB khởi động
 mongosh --eval "
 use walmart;
 db.createUser({
@@ -38,9 +44,16 @@ db.createUser({
   pwd: 'wm_mega',
   roles: [{role: 'readWrite', db: 'walmart'}]
 });
-" 2>/dev/null || echo "⚠️  User đã tồn tại hoặc có lỗi"
+" 2>/dev/null || echo "⚠️  User có thể đã tồn tại"
 
-echo "✅ MongoDB setup complete!"
+# Bật authentication
+echo "🔒 Enable MongoDB authentication..."
+sudo sed -i 's/# security:/security:/g' /etc/mongod.conf
+sudo sed -i 's/#   authorization: enabled/  authorization: enabled/g' /etc/mongod.conf || sudo sed -i '/security:/a \  authorization: enabled' /etc/mongod.conf
+sudo systemctl restart mongod
+sleep 3
+
+echo "✅ MongoDB setup complete with authentication!"
 
 # Lấy version Python
 PYTHON_VERSION=$(python3 --version | awk '{print $2}')
