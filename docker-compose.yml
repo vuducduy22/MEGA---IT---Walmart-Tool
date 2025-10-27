@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: wm-mega-app
     hostname: wm-mega
+    network_mode: "host"  # Cho phép truy cập localhost của HOST
     ports:
       - "5000:5000"
     volumes:

@@ -93,8 +93,8 @@ else
     log_warning "MultiloginX .deb file not found, skipping..."
 fi
 
-# 3. Setup and Start MLX Agent
-if [ -f "/app/multilogin/mlx" ]; then
+# 3. Setup and Start MLX Agent (SKIP - MLX chạy trên HOST)
+if false && [ -f "/app/multilogin/mlx" ]; then
     log "Setting up MLX Agent..."
     
     # Create /opt/mlx directory if not exists
