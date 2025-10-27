@@ -741,8 +741,7 @@ def start_quick_profile(proxy: str = None):
         "browser_version": "mimic_141.3",
         "core_version": 141,
         "parameters": {
-            "fingerprint": {
-            },
+            "fingerprint": {},
             "flags": {
                 "navigator_masking": "mask",
                 "audio_masking": "mask",
@@ -776,15 +775,16 @@ def start_quick_profile(proxy: str = None):
         proxy_parts = proxy.split(":")
         if len(proxy_parts) >= 2:
             # Format: host:port hoặc host:port:username:password hoặc host:port:username:password:extras
-            payload["proxy"] = {
+            # Proxy phải nằm trong parameters, không phải root level
+            payload["parameters"]["proxy"] = {
                 "host": proxy_parts[0],
                 "type": "http",
                 "port": int(proxy_parts[1])
             }
             # Thêm username/password nếu có
             if len(proxy_parts) >= 4:
-                payload["proxy"]["username"] = proxy_parts[2]
-                payload["proxy"]["password"] = proxy_parts[3]
+                payload["parameters"]["proxy"]["username"] = proxy_parts[2]
+                payload["parameters"]["proxy"]["password"] = proxy_parts[3]
         else:
             raise ValueError(f"Invalid proxy format: {proxy}. Expected format: 'host:port' or 'host:port:username:password'")
     
@@ -804,9 +804,9 @@ def start_quick_profile(proxy: str = None):
         }
     }
     
-    # Add proxy if exists
-    if "proxy" in payload:
-        payload_minimal["proxy"] = payload["proxy"]
+    # Add proxy if exists - proxy phải nằm trong parameters
+    if "proxy" in payload.get("parameters", {}):
+        payload_minimal["parameters"]["proxy"] = payload["parameters"]["proxy"]
     
     # Debug: In cả 2 payloads
     print("📦 Payload FULL:", json.dumps(payload_full, indent=2))
