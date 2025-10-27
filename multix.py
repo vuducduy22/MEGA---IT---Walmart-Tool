@@ -738,7 +738,7 @@ def start_quick_profile(proxy: str = None):
         "os_type": "linux",
         "automation": "selenium",
         "is_headless": True,
-        "core_version": 141,  
+        "browser_version": "141",
         "parameters": {
             "fingerprint": {
             },
@@ -794,7 +794,7 @@ def start_quick_profile(proxy: str = None):
         "os_type": payload["os_type"],
         "automation": payload["automation"],
         "is_headless": payload["is_headless"],
-        "core_version": payload["core_version"],
+        "browser_version": payload["browser_version"],
         "parameters": {
             "flags": payload["parameters"]["flags"],
             "storage": payload["parameters"]["storage"],
