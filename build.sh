@@ -38,6 +38,8 @@ pip install --upgrade pip
 # Cài đặt thư viện từ requirements.txt
 echo "📦 Cài đặt các gói trong requirements.txt..."
 if [ -f "requirements.txt" ]; then
+    # Cài setuptools trước (vì distutils đã bị remove trong Python 3.12)
+    pip install --upgrade setuptools
     pip install -r requirements.txt
 else
     echo "⚠️  Warning: requirements.txt not found. Skipping package installation."
