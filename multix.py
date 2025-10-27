@@ -738,7 +738,7 @@ def start_quick_profile(proxy: str = None):
         "os_type": "linux",
         "automation": "selenium",
         "is_headless": True,
-        "browser_version": "mimic_141.3",
+        # "browser_version": "mimic_141.3",  # Optional - MLX sẽ tự auto-detect
         "parameters": {
             "fingerprint": {
             },
@@ -794,7 +794,6 @@ def start_quick_profile(proxy: str = None):
         "os_type": payload["os_type"],
         "automation": payload["automation"],
         "is_headless": payload["is_headless"],
-        "browser_version": payload["browser_version"],
         "parameters": {
             "flags": payload["parameters"]["flags"],
             "storage": payload["parameters"]["storage"],
@@ -806,6 +805,7 @@ def start_quick_profile(proxy: str = None):
     if "proxy" in payload:
         payload_minimal["proxy"] = payload["proxy"]
     
+    # Debug: In cả 2 payloads
     print("📦 Payload FULL:", json.dumps(payload_full, indent=2))
     print("📦 Payload MINIMAL:", json.dumps(payload_minimal, indent=2))
     
