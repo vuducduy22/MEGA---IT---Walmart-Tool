@@ -112,3 +112,5 @@ tmux new -s walmart
 
 # 4. Khi quay lại server, attach lại:
 tmux attach -t walmart
+
+chmod +x build.sh

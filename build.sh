@@ -128,8 +128,8 @@ cleanup() {
     lsof -ti:5000 | xargs kill -9 2>/dev/null || true
 }
 
-# Set trap for cleanup on exit
-trap cleanup EXIT
+# Set trap for cleanup on exit (chỉ trap ERROR, không trap EXIT vì app chạy nền)
+trap cleanup ERR INT TERM
 
 echo "Đóng Xvfb hiện tại nếu có..."
 pkill -f "Xvfb :99" 2>/dev/null || echo "Không có Xvfb nào đang chạy trên display :99"
