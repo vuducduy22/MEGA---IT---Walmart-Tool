@@ -164,11 +164,18 @@ lsof -ti:5000 | xargs kill -9 2>/dev/null || echo "No process running on port 50
 
 echo "Chạy Flask app..."
 if [ -f "app.py" ]; then
-    python3 app.py &
+    # Chạy app với nohup để nó không bị tắt khi SSH disconnect
+    nohup python3 app.py > app.log 2>&1 &
     APP_PID=$!
     echo "✅ Flask app started with PID: $APP_PID"
     echo "🌐 App available at: http://localhost:5000"
-    wait $APP_PID
+    echo "📋 Logs: tail -f app.log"
+    
+    # Không dùng wait để script không bị block
+    sleep 2
+    echo "✅ App đang chạy nền - Có thể thoát SSH an toàn"
+    echo "💡 Để xem logs: tail -f app.log"
+    echo "💡 Để dừng app: pkill -f 'python.*app.py'"
 else
     echo "❌ Error: app.py not found!"
     exit 1

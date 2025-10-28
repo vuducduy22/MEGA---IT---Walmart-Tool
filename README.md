@@ -97,3 +97,18 @@ sudo systemctl enable mongod
 
 sudo systemctl restart mongod
 sudo systemctl status mongod
+
+App sẽ chạy nền. Có thể xem logs:
+tail -f app.log
+
+# 1. Tạo session tmux
+tmux new -s walmart
+
+# 2. Chạy app trong tmux
+./build.sh
+
+# 3. Detach (Giữ Ctrl+B rồi nhấn D)
+# App sẽ tiếp tục chạy ngay cả khi thoát SSH
+
+# 4. Khi quay lại server, attach lại:
+tmux attach -t walmart
